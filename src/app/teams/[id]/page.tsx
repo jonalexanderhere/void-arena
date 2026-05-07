@@ -69,7 +69,7 @@ export default function TeamProfilePage() {
           
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
             <div className="w-40 h-40 bg-white/5 border-2 border-primary flex items-center justify-center font-black italic text-6xl text-primary shadow-[0_0_50px_rgba(59,130,246,0.2)]">
-              {team.name[0]}
+              {team?.name?.[0] || '?'}
             </div>
             
             <div className="flex-1 text-center md:text-left space-y-4">

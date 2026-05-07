@@ -78,18 +78,18 @@ export default function TeamsPage() {
             <Shield className="w-6 h-6 text-primary" /> My Squad
           </h2>
           <div className="glass-card p-10 bg-primary/5 border-primary/20 flex flex-col md:flex-row items-center gap-12">
-            <div className="w-40 h-40 bg-[#050816] border-2 border-primary flex items-center justify-center font-black italic text-6xl text-primary shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-              P
+            <div className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-primary">
+              {myTeam?.name?.[0] || '?'}
             </div>
             <div className="flex-1 space-y-6">
               <div className="space-y-1 text-center md:text-left">
                 <div className="text-xs font-bold text-primary uppercase tracking-[0.3em]">YOU ARE THE CAPTAIN</div>
-                <h3 className="text-4xl font-black tracking-tighter italic uppercase">PHOENIX CYSEC</h3>
+                <h3 className="text-4xl font-black tracking-tighter italic uppercase">{myTeam?.name || 'N/A'}</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-6 border-y border-white/5">
-                <TeamStat label="Members" value="5 / 5" />
-                <TeamStat label="Global Rank" value="#01" highlight />
-                <TeamStat label="Matches" value="142" />
+                <TeamStat label="Members" value={`${myTeam?.members || 0} / 5`} />
+                <TeamStat label="Global Rank" value={`#0${myTeam?.rank || 0}`} highlight />
+                <TeamStat label="Matches" value={myTeam?.wins ? (myTeam.wins * 3).toString() : '0'} />
                 <TeamStat label="Win Rate" value="86%" />
               </div>
               <div className="flex flex-wrap gap-4">
@@ -131,13 +131,13 @@ function TeamCard({ team, delay }: any) {
       className="glass-card p-8 space-y-6 group cursor-pointer border-white/5 hover:border-primary/30 transition-all duration-500"
     >
       <div className="flex justify-between items-start">
-        <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-2xl group-hover:border-primary/50 group-hover:text-primary transition-all duration-500">
-          {team.name[0]}
+        <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-2xl text-primary group-hover:border-primary/50 transition-colors">
+          {team?.name?.[0] || '?'}
         </div>
         <div className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest ${
-          team.status === 'Recruiting' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-500'
+          team?.status === 'Recruiting' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-500'
         }`}>
-          {team.status}
+          {team?.status || 'Unknown'}
         </div>
       </div>
 

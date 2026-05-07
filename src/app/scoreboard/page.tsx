@@ -106,8 +106,8 @@ export default function ScoreboardPage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-sm group-hover:border-primary/50 transition-colors">
-                          {team.name[0]}
+                        <div className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-primary">
+                          {team?.name?.[0] || '?'}
                         </div>
                         <span className="font-black italic uppercase tracking-tight text-white group-hover:text-primary transition-colors">{team.name}</span>
                       </div>

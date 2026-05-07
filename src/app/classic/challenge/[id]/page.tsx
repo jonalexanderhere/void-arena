@@ -220,9 +220,9 @@ export default function ChallengeDetailPage() {
             <div className="glass-card p-8 space-y-6">
               <h3 className="text-sm font-bold uppercase tracking-widest border-b border-white/5 pb-4">First Blood</h3>
               {challenge.first_blood ? (
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 border border-primary/20 flex items-center justify-center font-black italic text-xl text-primary">
-                    {challenge.first_blood[0]}
+                <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
+                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center text-[8px] font-black italic italic">
+                    {challenge?.first_blood?.[0] || '?'}
                   </div>
                   <div>
                     <div className="text-lg font-black italic uppercase italic tracking-tight">{challenge.first_blood}</div>
