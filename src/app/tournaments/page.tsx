@@ -6,54 +6,75 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { TournamentBracket } from '@/components/tournaments/Bracket';
 
-const MOCK_TOURNAMENTS = [
-  { 
-    id: 1, 
-    name: 'APAC REGIONAL FINALS', 
-    type: 'Swiss', 
-    status: 'Live', 
-    date: 'MAY 15-20, 2026',
-    teams: 16,
-    prize: '$25,000',
-    region: 'APAC',
-    color: 'border-primary'
-  },
-  { 
-    id: 2, 
-    name: 'GLOBAL INVITATIONAL 2026', 
-    type: 'Double Elimination', 
-    status: 'Upcoming', 
-    date: 'JUNE 02, 2026',
-    teams: 32,
-    prize: '$100,000',
-    region: 'GLOBAL',
-    color: 'border-white/5'
-  },
-  { 
-    id: 3, 
-    name: 'ROOKIE CUP #42', 
-    type: 'Single Elimination', 
-    status: 'Upcoming', 
-    date: 'MAY 28, 2026',
-    teams: 64,
-    prize: '$5,000',
-    region: 'NA/EU',
-    color: 'border-white/5'
-  },
-  { 
-    id: 4, 
-    name: 'CYBER JAWARA STUDENT', 
-    type: 'Round Robin', 
-    status: 'Completed', 
-    date: 'APRIL 10, 2026',
-    teams: 128,
-    prize: 'Scholarships',
-    region: 'SEA',
-    color: 'border-white/5'
-  },
-];
+import { getSupabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 
 export default function TournamentsPage() {
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [joiningId, setJoiningId] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const supabase = getSupabase();
+        
+        // Fetch user
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+
+        // Fetch tournaments
+        const { data: tourneys, error } = await supabase
+          .from('tournaments')
+          .select('*')
+          .order('date', { ascending: true });
+        
+        if (error) throw error;
+        setTournaments(tourneys || []);
+      } catch (err) {
+        console.error('Error fetching tournaments:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const handleJoin = async (tournamentId: number) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    setJoiningId(tournamentId);
+    try {
+      const supabase = getSupabase();
+      // Assume a table tournament_participants or an RPC join_tournament
+      const { error } = await supabase
+        .from('tournament_participants')
+        .insert({
+          tournament_id: tournamentId,
+          user_id: user.id
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          alert('You have already joined this tournament.');
+        } else {
+          throw error;
+        }
+      } else {
+        alert('Successfully joined the tournament!');
+        // Ideally refresh the list or state
+      }
+    } catch (err: any) {
+      alert(`Failed to join: ${err.message}`);
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#050816] text-white selection:bg-primary/30">
       <Navbar />
@@ -89,17 +110,32 @@ export default function TournamentsPage() {
           </div>
         </div>
 
-        {/* No Active Tournaments State */}
-        <div className="glass-card p-20 flex flex-col items-center justify-center text-center space-y-6 border-dashed border-white/10">
-          <div className="p-6 bg-white/5 rounded-full opacity-20">
-            <Trophy className="w-16 h-16" />
+        {/* Tournament List */}
+        {tournaments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {tournaments.map((t, i) => (
+              <TournamentCard 
+                key={t.id} 
+                tournament={t} 
+                delay={i * 0.1} 
+                onJoin={() => handleJoin(t.id)}
+                isJoining={joiningId === t.id}
+              />
+            ))}
           </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black italic uppercase italic tracking-tight">Circuit Offline</h2>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest max-w-sm">There are no active tournaments scheduled at this moment. Stay tuned for the next season announcements.</p>
+        ) : (
+          /* No Active Tournaments State */
+          <div className="glass-card p-20 flex flex-col items-center justify-center text-center space-y-6 border-dashed border-white/10">
+            <div className="p-6 bg-white/5 rounded-full opacity-20">
+              <Trophy className="w-16 h-16" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black italic uppercase tracking-tight">Circuit Offline</h2>
+              <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest max-w-sm">There are no active tournaments scheduled at this moment. Stay tuned for the next season announcements.</p>
+            </div>
+            <Link href="/dashboard" className="esports-button !px-10">Back to Dashboard</Link>
           </div>
-          <Link href="/dashboard" className="esports-button !px-10">Back to Dashboard</Link>
-        </div>
+        )}
 
         {/* Bracket System Section */}
         <section className="pt-20 space-y-12">
@@ -147,13 +183,13 @@ function MiniMatch({ team1, team2, score, status }: any) {
   );
 }
 
-function TournamentCard({ tournament, delay }: any) {
+function TournamentCard({ tournament, delay, onJoin, isJoining }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className={`glass-card p-8 space-y-6 group hover:border-primary/30 transition-all duration-500 ${tournament.color}`}
+      className={`glass-card p-8 space-y-6 group hover:border-primary/30 transition-all duration-500 ${tournament.color || 'border-white/5'}`}
     >
       <div className="flex items-center justify-between">
         <div className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
@@ -181,9 +217,18 @@ function TournamentCard({ tournament, delay }: any) {
         </div>
       </div>
 
-      <button className="w-full py-4 border border-white/10 hover:border-primary/50 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/5">
-        View Event Detail
-      </button>
+      <div className="flex flex-col gap-2 pt-4">
+        <button 
+          onClick={onJoin}
+          disabled={isJoining || tournament.status === 'Completed'}
+          className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+        >
+          {isJoining ? 'Processing...' : 'Register for Tournament'}
+        </button>
+        <Link href={`/tournaments/${tournament.id}`} className="w-full py-4 border border-white/10 hover:border-primary/50 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/5 text-center">
+          View Event Detail
+        </Link>
+      </div>
     </motion.div>
   );
 }

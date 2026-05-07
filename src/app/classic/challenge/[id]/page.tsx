@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -14,6 +14,8 @@ import { Navbar } from '@/components/layout/Navbar';
 
 export default function ChallengeDetailPage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const tid = searchParams.get('tid');
   const [challenge, setChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [flag, setFlag] = useState('');
@@ -52,7 +54,8 @@ export default function ChallengeDetailPage() {
       // to verify the flag securely against the database.
       const { data, error } = await supabase.rpc('submit_flag', {
         p_challenge_id: id,
-        p_flag: flag
+        p_flag: flag,
+        p_tournament_id: tid ? parseInt(tid) : null
       });
 
       if (error) throw error;
