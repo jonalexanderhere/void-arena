@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { AdminSidebar } from '@/components/admin/Sidebar';
 import { Filter, Plus, Search, Terminal } from 'lucide-react';
@@ -7,6 +7,8 @@ import { useEffect, useMemo, useState } from 'react';
 type ChallengeItem = {
   id: string;
   title: string;
+  description?: string;
+  points?: number;
   category: string;
   difficulty: string;
   challenge_url?: string;
@@ -23,6 +25,8 @@ export default function AdminChallenges() {
   const [status, setStatus] = useState('');
   const [form, setForm] = useState({
     title: '',
+    description: '',
+    points: '100',
     category: 'Web Exploitation',
     difficulty: 'Easy',
     challenge_url: '',
@@ -68,6 +72,8 @@ export default function AdminChallenges() {
     }
     setForm({
       title: '',
+      description: '',
+      points: '100',
       category: 'Web Exploitation',
       difficulty: 'Easy',
       challenge_url: '',
@@ -98,6 +104,19 @@ export default function AdminChallenges() {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="CHALLENGE TITLE"
               className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
+            />
+            <input
+              type="number"
+              value={form.points}
+              onChange={(e) => setForm({ ...form, points: e.target.value })}
+              placeholder="POINTS"
+              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
+            />
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="CHALLENGE DESCRIPTION"
+              className="col-span-2 w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest min-h-[100px]"
             />
             <select
               value={form.category}
@@ -163,6 +182,7 @@ export default function AdminChallenges() {
               <tr className="bg-white/5 text-[10px] font-bold uppercase tracking-widest text-zinc-500 border-b border-white/5">
                 <th className="px-8 py-6">ID</th>
                 <th className="px-8 py-6">Title</th>
+                <th className="px-8 py-6">Points</th>
                 <th className="px-8 py-6">Category</th>
                 <th className="px-8 py-6">Difficulty</th>
                 <th className="px-8 py-6">Challenge URL</th>
@@ -174,6 +194,7 @@ export default function AdminChallenges() {
                 <tr key={row.id} className="bg-white/5">
                   <td className="px-8 py-4 text-[11px] font-mono">{row.id}</td>
                   <td className="px-8 py-4 text-[11px] font-bold uppercase">{row.title}</td>
+                  <td className="px-8 py-4 text-[11px] font-bold text-primary">{row.points}</td>
                   <td className="px-8 py-4 text-[11px]">{row.category}</td>
                   <td className="px-8 py-4 text-[11px]">{row.difficulty}</td>
                   <td className="px-8 py-4 text-[11px]"><a className="text-primary" href={row.challenge_url} target="_blank" rel="noreferrer">{row.challenge_url ? 'Open' : '-'}</a></td>

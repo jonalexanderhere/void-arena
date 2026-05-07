@@ -44,6 +44,8 @@ export async function POST(req: Request) {
 
     const payload: any = {
       title: body?.title,
+      description: body?.description || '',
+      points: parseInt(body?.points) || 100,
       category: body?.category,
       difficulty: difficultyMap[String(body?.difficulty)] ?? String(body?.difficulty ?? 'medium').toLowerCase(),
       challenge_url: body?.challenge_url || null,
