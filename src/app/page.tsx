@@ -12,17 +12,19 @@ export default function LandingPage() {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function getSession() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    }
-    getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
 
     const interval = setInterval(() => {
       setOnlinePlayers(prev => prev + Math.floor(Math.random() * 5) - 2);
     }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(interval);
+    };
+  }, [supabase]);
 
   return (
     <div className="min-h-screen bg-[#050816] text-white overflow-x-hidden selection:bg-primary/30">
@@ -48,7 +50,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
                   <p className="text-[10px] font-black italic uppercase text-white tracking-tight">
-                    {user.email?.split('@')[0]}
+                    {user.email?.split('@')?.[0] ?? 'Recruit_00'}
                   </p>
                   <Link href="/dashboard" className="text-[9px] text-primary font-bold uppercase tracking-widest hover:underline">Dashboard</Link>
                 </div>

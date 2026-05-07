@@ -2,11 +2,75 @@
 
 import { AdminSidebar } from "@/components/admin/Sidebar";
 import { Plus, Trophy, Search, Filter, Edit, MoreVertical, Calendar, Users, Zap, Globe, Shield, Save, X } from "lucide-react";
-import { useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminTournaments() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    status: 'Upcoming',
+    date: '',
+    prize: '',
+    region: 'GLOBAL',
+    description: '',
+    teams: 0
+  });
+  
+  const supabase = createClientComponentClient();
+
+  async function fetchTournaments() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error) setTournaments(data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role !== 'admin') {
+        window.location.href = '/dashboard';
+        return;
+      }
+      
+      fetchTournaments();
+    }
+    checkAdmin();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase
+      .from('tournaments')
+      .insert([formData]);
+
+    if (!error) {
+      setShowCreateModal(false);
+      fetchTournaments();
+      setFormData({ name: '', status: 'Upcoming', date: '', prize: '', region: 'GLOBAL', description: '', teams: 0 });
+    } else {
+      alert('Error creating tournament: ' + error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050816] text-white flex">
@@ -62,14 +126,51 @@ export default function AdminTournaments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              <tr className="bg-white/5">
-                <td colSpan={6} className="px-8 py-20 text-center">
-                  <div className="flex flex-col items-center gap-4">
-                    <Trophy className="w-12 h-12 text-zinc-700 animate-pulse" />
-                    <div className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Retrieving Circuit Data...</div>
-                  </div>
-                </td>
-              </tr>
+              {loading ? (
+                <tr className="bg-white/5">
+                  <td colSpan={6} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Trophy className="w-12 h-12 text-zinc-700 animate-pulse" />
+                      <div className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Retrieving Circuit Data...</div>
+                    </div>
+                  </td>
+                </tr>
+              ) : tournaments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-8 py-20 text-center text-zinc-600 font-bold uppercase text-[10px] tracking-widest">
+                    No active circuits found in database.
+                  </td>
+                </tr>
+              ) : (
+                tournaments.map((t) => (
+                  <tr key={t.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black italic text-xs">
+                          {t.name[0]}
+                        </div>
+                        <span className="font-bold italic uppercase tracking-tight text-white">{t.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">CLASSIC CTF</td>
+                    <td className="px-8 py-5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{t.region}</td>
+                    <td className="px-8 py-5">
+                      <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest ${
+                        t.status === 'Live' ? 'bg-emerald-500/20 text-emerald-500' : 
+                        t.status === 'Upcoming' ? 'bg-amber-500/20 text-amber-500' : 'bg-zinc-800 text-zinc-500'
+                      }`}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-[10px] font-bold text-white uppercase tracking-widest">{t.teams} SQUADS</td>
+                    <td className="px-8 py-5 text-right">
+                      <button className="p-2 hover:text-primary transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -106,61 +207,77 @@ export default function AdminTournaments() {
                   </button>
                 </div>
 
-                <div className="p-8 grid grid-cols-2 gap-6">
+                <form onSubmit={handleCreate} className="p-8 grid grid-cols-2 gap-6">
                   <div className="col-span-2 space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Tournament Name</label>
-                    <input className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" placeholder="E.G. GLOBAL INVITATIONAL 2026" />
+                    <input 
+                      required
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      placeholder="E.G. GLOBAL INVITATIONAL 2026" 
+                    />
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Game Mode</label>
-                    <select className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none">
-                      <option>CLASSIC CTF</option>
-                      <option>ARENA SPEEDRUN</option>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Region / Scope</label>
+                    <input 
+                      value={formData.region}
+                      onChange={e => setFormData({...formData, region: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      placeholder="APAC / GLOBAL" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Status</label>
+                    <select 
+                      value={formData.status}
+                      onChange={e => setFormData({...formData, status: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none"
+                    >
+                      <option value="Upcoming">UPCOMING</option>
+                      <option value="Live">LIVE</option>
+                      <option value="Completed">COMPLETED</option>
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Participant Mode</label>
-                    <select className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none">
-                      <option>SOLO PARTICIPATION</option>
-                      <option>TEAM PARTICIPATION</option>
-                    </select>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Total Teams Limit</label>
+                    <input 
+                      type="number" 
+                      value={formData.teams}
+                      onChange={e => setFormData({...formData, teams: parseInt(e.target.value)})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Total Rounds</label>
-                    <input type="number" defaultValue={3} className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" />
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Prize Pool</label>
+                    <input 
+                      value={formData.prize}
+                      onChange={e => setFormData({...formData, prize: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      placeholder="50,000 USD" 
+                    />
                   </div>
 
-                  <div className="col-span-2 space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Category Selection (Banned System Enabled)</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {['WEB', 'PWN', 'CRYPTO', 'REVERSE', 'OSINT', 'FORENSICS'].map(cat => (
-                        <label key={cat} className="flex items-center gap-3 p-3 bg-[#050816] border border-white/5 cursor-pointer hover:border-primary/50 transition-all">
-                          <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
-                          <span className="text-[10px] font-black italic">{cat}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Registration Limit</label>
-                    <input type="number" className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" placeholder="128" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Prize Pool (USD)</label>
-                    <input className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" placeholder="50,000" />
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Date / Time Info</label>
+                    <input 
+                      value={formData.date}
+                      onChange={e => setFormData({...formData, date: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      placeholder="JUNE 02, 2026 • 18:00 UTC" 
+                    />
                   </div>
 
                   <div className="col-span-2 pt-6">
-                    <button className="esports-button w-full flex items-center justify-center gap-2 !py-4">
+                    <button type="submit" className="esports-button w-full flex items-center justify-center gap-2 !py-4">
                       <Save className="w-5 h-5" /> Initialize Circuit
                     </button>
                   </div>
-                </div>
+                </form>
               </motion.div>
             </div>
           )}

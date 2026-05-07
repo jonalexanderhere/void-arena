@@ -12,12 +12,14 @@ export function Navbar() {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function getProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    }
-    getProfile();
-  }, []);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   return (
     <nav className="h-20 border-b border-white/5 bg-[#050816]/80 backdrop-blur-xl fixed top-0 w-full z-50 px-6 flex items-center justify-between">
@@ -49,7 +51,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-black italic uppercase text-white tracking-tight">
-              {user?.email?.split('@')[0] || 'Recruit_00'}
+              {user?.email?.split('@')?.[0] ?? 'Recruit_00'}
             </p>
             <p className="text-[10px] text-primary font-bold uppercase tracking-widest">
               {user ? 'Authenticated' : 'Guest Access'}
