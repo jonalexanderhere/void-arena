@@ -1,18 +1,28 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Zap, Clock, Terminal, Activity, ChevronRight, AlertCircle, Trophy } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSoundEffects } from '@/components/arena/SoundManager';
 
 export default function ArenaHUD() {
   const [timeLeft, setTimeLeft] = useState(300); // 5:00
+  const [showFirstBlood, setShowFirstBlood] = useState(false);
+  const { playSound } = useSoundEffects();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
     const interval = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(interval);
   }, [timeLeft]);
+
+  // Demo trigger for First Blood
+  const triggerFirstBlood = () => {
+    setShowFirstBlood(true);
+    playSound('FIRST_BLOOD');
+    setTimeout(() => setShowFirstBlood(false), 5000);
+  };
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -137,10 +147,41 @@ export default function ArenaHUD() {
             </div>
 
             <div className="flex justify-center">
-              <button className="esports-button group">
+              <button 
+                onClick={triggerFirstBlood}
+                className="esports-button group"
+              >
                 Verify Solution <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
+
+            {/* Cinematic First Blood Overlay */}
+            <AnimatePresence>
+              {showFirstBlood && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.5 }}
+                  className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
+                >
+                  <div className="absolute inset-0 bg-rose-900/40 backdrop-blur-sm animate-pulse" />
+                  <motion.div 
+                    initial={{ y: 50 }}
+                    animate={{ y: 0 }}
+                    className="relative text-center space-y-4"
+                  >
+                    <div className="text-rose-500 font-black italic text-8xl tracking-tighter uppercase italic italic skew-x-[-15deg] drop-shadow-[0_0_50px_rgba(244,63,94,0.8)]">
+                      FIRST BLOOD
+                    </div>
+                    <div className="flex items-center justify-center gap-4 text-white font-black italic text-2xl uppercase tracking-[0.5em]">
+                      <div className="h-px w-20 bg-white/50" />
+                      PHOENIX CLAIMS THE LEAD
+                      <div className="h-px w-20 bg-white/50" />
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </section>
 
