@@ -7,17 +7,17 @@ export function TournamentBracket() {
     {
       name: 'Quarter Finals',
       matches: [
-        { team1: 'PHOENIX', team2: 'RAVEN', score1: 2, score2: 1, winner: 1 },
-        { team1: 'HYDRA', team2: 'ZERO_D', score1: 0, score2: 2, winner: 2 },
-        { team1: 'VOID_R', team2: 'ROOT_A', score1: 3, score2: 0, winner: 1 },
-        { team1: 'GHOST', team2: 'CYBER', score1: 1, score2: 2, winner: 2 },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
       ]
     },
     {
       name: 'Semi Finals',
       matches: [
-        { team1: 'PHOENIX', team2: 'ZERO_D', score1: 0, score2: 0, winner: null },
-        { team1: 'VOID_R', team2: 'CYBER', score1: 0, score2: 0, winner: null },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
+        { team1: 'TBD', team2: 'TBD', score1: 0, score2: 0, winner: null },
       ]
     },
     {

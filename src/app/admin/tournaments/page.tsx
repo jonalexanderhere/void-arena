@@ -62,36 +62,14 @@ export default function AdminTournaments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {[
-                { name: 'APAC Regional Finals', mode: 'Classic', type: 'Team', status: 'Live', players: '16/16' },
-                { name: 'Global Invitational', mode: 'Arena', type: 'Solo', status: 'Upcoming', players: '128/256' },
-                { name: 'Rookie Cup #42', mode: 'Classic', type: 'Team', status: 'Upcoming', players: '0/64' },
-              ].map((tourney, i) => (
-                <tr key={i} className="hover:bg-white/5 transition-colors group">
-                  <td className="px-8 py-6">
-                    <div className="text-sm font-black italic uppercase italic tracking-tight">{tourney.name}</div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{tourney.mode}</span>
-                  </td>
-                  <td className="px-8 py-6 text-[10px] text-primary font-bold uppercase tracking-widest">{tourney.type}</td>
-                  <td className="px-8 py-6">
-                    <div className={`inline-flex items-center gap-2 px-2 py-1 text-[9px] font-bold uppercase tracking-widest ${
-                      tourney.status === 'Live' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-800 text-zinc-500'
-                    }`}>
-                      <div className={`w-1 h-1 rounded-full ${tourney.status === 'Live' ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-600'}`} />
-                      {tourney.status}
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-xs text-zinc-500 font-mono">{tourney.players}</td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button className="px-3 py-1 bg-primary/20 text-primary text-[9px] font-black uppercase tracking-widest border border-primary/20 hover:bg-primary/30 transition-all">Start Bracket</button>
-                      <button className="p-2 hover:bg-white/10 transition-colors"><Edit className="w-4 h-4 text-zinc-500" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              <tr className="bg-white/5">
+                <td colSpan={6} className="px-8 py-20 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Trophy className="w-12 h-12 text-zinc-700 animate-pulse" />
+                    <div className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Retrieving Circuit Data...</div>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

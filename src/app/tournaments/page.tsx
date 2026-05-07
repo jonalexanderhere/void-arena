@@ -89,60 +89,16 @@ export default function TournamentsPage() {
           </div>
         </div>
 
-        {/* Featured Live Tournament */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative glass-card p-10 flex flex-col lg:flex-row gap-12 overflow-hidden border-primary/30 bg-primary/5"
-        >
-          <div className="absolute top-0 right-0 p-6">
-            <div className="text-[10px] font-black text-primary flex items-center gap-2 bg-[#050816] px-4 py-2 border border-primary/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              LIVE NOW
-            </div>
+        {/* No Active Tournaments State */}
+        <div className="glass-card p-20 flex flex-col items-center justify-center text-center space-y-6 border-dashed border-white/10">
+          <div className="p-6 bg-white/5 rounded-full opacity-20">
+            <Trophy className="w-16 h-16" />
           </div>
-
-          <div className="flex-1 space-y-6">
-            <div className="space-y-2">
-              <div className="text-xs font-bold text-primary uppercase tracking-[0.3em]">APAC REGIONAL FINALS • ROUND 3</div>
-              <h2 className="text-5xl font-black tracking-tighter italic uppercase">Elite Division Master</h2>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-6 border-y border-white/5">
-              <TournamentStat icon={<Calendar className="w-4 h-4" />} label="Schedule" value="MAY 15-20" />
-              <TournamentStat icon={<Users className="w-4 h-4" />} label="Teams" value="16 / 16" />
-              <TournamentStat icon={<Zap className="w-4 h-4" />} label="Prize Pool" value="$25,000" />
-              <TournamentStat icon={<MapPin className="w-4 h-4" />} label="Location" value="SYDNEY, AU" />
-            </div>
-
-            <div className="flex flex-wrap gap-6 pt-4">
-              <Link href="/arena" className="esports-button flex items-center gap-2 group">
-                Enter Arena <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link href="/observer" className="esports-button-outline">
-                Watch Broadcast
-              </Link>
-            </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black italic uppercase italic tracking-tight">Circuit Offline</h2>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest max-w-sm">There are no active tournaments scheduled at this moment. Stay tuned for the next season announcements.</p>
           </div>
-
-          <div className="lg:w-96 flex flex-col gap-4">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Top Matchups</div>
-            <div className="space-y-3">
-              <MiniMatch team1="PHOENIX" team2="RAVEN" score="2 - 1" status="LIVE" />
-              <MiniMatch team1="HYDRA" team2="ZERO_D" score="0 - 0" status="UPCOMING" />
-              <MiniMatch team1="VOID_R" team2="ROOT_A" score="3 - 0" status="FINISHED" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Grid Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {MOCK_TOURNAMENTS.slice(1).map((tournament, i) => (
-            <TournamentCard key={tournament.id} tournament={tournament} delay={i * 0.1} />
-          ))}
+          <Link href="/dashboard" className="esports-button !px-10">Back to Dashboard</Link>
         </div>
 
         {/* Bracket System Section */}
