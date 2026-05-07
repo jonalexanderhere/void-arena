@@ -51,21 +51,19 @@ export default function ChallengeDetailPage() {
     setStatus(null);
 
     try {
-      // In a real scenario, this would call an Edge Function or API route
-      // to verify the flag securely against the database.
       const { data, error } = await (supabase as any).rpc('submit_flag', {
         p_challenge_id: id as string,
         p_flag: flag,
-        p_tournament_id: tid ? parseInt(tid) : null
+        p_tournament_id: tid || null
       });
 
       if (error) throw error;
 
-      if (data.correct) {
-        setStatus({ type: 'success', message: 'CRITICAL HIT! Flag Captured Successfully.' });
+      if (data.success) {
+        setStatus({ type: 'success', message: data.message || 'CRITICAL HIT! Flag Captured Successfully.' });
         setFlag('');
       } else {
-        setStatus({ type: 'error', message: 'ACCESS DENIED: Invalid Flag Pattern.' });
+        setStatus({ type: 'error', message: data.message || 'ACCESS DENIED: Invalid Flag Pattern.' });
       }
     } catch (err: any) {
       setStatus({ type: 'error', message: err.message || 'System error during validation.' });
