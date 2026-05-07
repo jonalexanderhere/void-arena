@@ -5,6 +5,7 @@ export async function POST(req: Request) {
   try {
     const supabase = getSupabase() as any;
     const { challengeId, flag, teamId, userId } = await req.json();
+    let isFirstBlood = false;
 
     // 1. Fetch challenge
     const { data: challenge, error: challError } = await supabase
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
         .single();
 
       if (!fb) {
+        isFirstBlood = true;
         await supabase.from('first_bloods').insert({
           challenge_id: challengeId,
           user_id: userId,
@@ -56,7 +58,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ correct: isCorrect });
+    return NextResponse.json({ correct: isCorrect, firstBlood: isFirstBlood });
   } catch (error: any) {
     const isEnvError = typeof error?.message === 'string' && error.message.includes('environment variables');
     return NextResponse.json(
