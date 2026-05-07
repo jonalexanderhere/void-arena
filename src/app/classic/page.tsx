@@ -2,15 +2,13 @@
 
 import { motion } from 'framer-motion';
 import { Shield, Terminal, Search, Filter, Download, ExternalLink, Users, Star, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getSupabase } from '@/lib/supabase';
 
 const CATEGORIES = [
   'All', 'Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Pwn', 'Forensics', 'OSINT', 'Cloud', 'Mobile', 'AI Security'
 ];
-
-import { getSupabase } from '@/lib/supabase';
-import { useState, useEffect } from 'react';
 
 export default function ClassicModePage() {
   const [challenges, setChallenges] = useState<any[]>([]);

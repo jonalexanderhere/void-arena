@@ -1,6 +1,10 @@
+'use client';
+
 import { getSupabase } from '@/lib/supabase';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Shield, Mail, Lock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
