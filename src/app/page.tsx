@@ -4,11 +4,20 @@ import { motion } from 'framer-motion';
 import { Shield, Trophy, Zap, Users, ChevronRight, Activity, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function LandingPage() {
   const [onlinePlayers, setOnlinePlayers] = useState(1243);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
+    async function getSession() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    }
+    getSession();
+
     const interval = setInterval(() => {
       setOnlinePlayers(prev => prev + Math.floor(Math.random() * 5) - 2);
     }, 3000);
@@ -34,9 +43,25 @@ export default function LandingPage() {
               <Link href="/scoreboard" className="nav-link uppercase tracking-widest text-xs">Scoreboard</Link>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Login</Link>
-            <Link href="/register" className="esports-button !px-6 !py-2 !text-xs">Join Arena</Link>
+          <div className="flex items-center gap-6">
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="text-right hidden sm:block">
+                  <p className="text-[10px] font-black italic uppercase text-white tracking-tight">
+                    {user.email?.split('@')[0]}
+                  </p>
+                  <Link href="/dashboard" className="text-[9px] text-primary font-bold uppercase tracking-widest hover:underline">Dashboard</Link>
+                </div>
+                <Link href="/profile" className="w-10 h-10 rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-primary hover:border-primary/50 transition-colors">
+                  <Shield className="w-5 h-5" />
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Login</Link>
+                <Link href="/register" className="esports-button !px-6 !py-2 !text-xs">Join Arena</Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>
