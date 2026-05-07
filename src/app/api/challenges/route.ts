@@ -13,6 +13,10 @@ export async function GET() {
 
     return NextResponse.json(data);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const isEnvError = typeof error?.message === 'string' && error.message.includes('environment variables');
+    return NextResponse.json(
+      { error: error.message ?? 'Internal server error' },
+      { status: isEnvError ? 503 : 500 }
+    );
   }
 }
