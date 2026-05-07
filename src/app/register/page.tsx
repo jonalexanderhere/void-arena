@@ -4,7 +4,50 @@ import { motion } from 'framer-motion';
 import { Shield, Github, Mail, Lock, User, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 export default function RegisterPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username,
+            full_name: username,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        // Create profile if it doesn't exist (though trigger usually handles this)
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#050816] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Ambience */}
@@ -28,25 +71,31 @@ export default function RegisterPage() {
         </div>
 
         <div className="glass-card p-8 space-y-6 border-white/10">
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2 md:col-span-2">
+          <form onSubmit={handleRegister} className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Username</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                 <input 
+                  required
                   type="text" 
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   placeholder="CYBER_PHOENIX"
                   className="w-full bg-[#0B1020] border border-white/5 px-12 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                 <input 
+                  required
                   type="email" 
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   className="w-full bg-[#0B1020] border border-white/5 px-12 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all"
                 />
@@ -58,32 +107,28 @@ export default function RegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                 <input 
+                  required
                   type="password" 
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full bg-[#0B1020] border border-white/5 px-12 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  className="w-full bg-[#0B1020] border border-white/5 px-12 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all"
-                />
-              </div>
-            </div>
+            {error && <p className="text-rose-500 text-[10px] font-bold uppercase tracking-widest">{error}</p>}
 
-            <div className="md:col-span-2 space-y-4 pt-2">
+            <div className="space-y-4 pt-2">
               <div className="flex items-start gap-3 p-3 bg-white/5 border border-white/5">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-[10px] text-zinc-400 font-medium">I agree to the <span className="text-white hover:underline cursor-pointer">Terms of Engagement</span> and the platform's <span className="text-white hover:underline cursor-pointer">Code of Conduct</span>.</p>
               </div>
-              <button className="esports-button w-full flex items-center justify-center gap-2">
-                Join the Arena <ChevronRight className="w-4 h-4" />
+              <button 
+                disabled={loading}
+                className="esports-button w-full flex items-center justify-center gap-2"
+              >
+                {loading ? 'Processing...' : 'Join the Arena'} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </form>
