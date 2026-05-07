@@ -1,9 +1,10 @@
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const supabase = getSupabase() as any;
+    const supabase = createRouteHandlerClient({ cookies });
     const { data, error } = await supabase
       .from('challenges')
       .select('*')
@@ -30,7 +31,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const supabase = getSupabase() as any;
+    const supabase = createRouteHandlerClient({ cookies });
     const body = await req.json();
 
     const difficultyMap: Record<string, string> = {

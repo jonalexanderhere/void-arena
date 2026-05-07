@@ -5,16 +5,46 @@ import { Shield, Users, UserPlus, Search, Filter, Star, Activity, ChevronRight, 
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 
-const MOCK_TEAMS = [
-  { name: 'PHOENIX CYSEC', members: 5, rank: 1, wins: 42, score: 12850, status: 'Recruiting' },
-  { name: 'RAVEN TEAM', members: 4, rank: 2, wins: 38, score: 11420, status: 'Full' },
-  { name: 'ZERO DAY', members: 3, rank: 3, wins: 31, score: 10100, status: 'Recruiting' },
-  { name: 'HYDRA SEC', members: 5, rank: 4, wins: 29, score: 9850, status: 'Full' },
-  { name: 'VOID RUNNERS', members: 4, rank: 5, wins: 24, score: 8700, status: 'Recruiting' },
-  { name: 'CYBER LORDS', members: 5, rank: 6, wins: 18, score: 7900, status: 'Full' },
-];
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState, useEffect } from 'react';
 
 export default function TeamsPage() {
+  const [teams, setTeams] = useState<any[]>([]);
+  const [myTeam, setMyTeam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch all teams
+        const { data: teamsData, error: teamsError } = await supabase
+          .from('teams')
+          .select('*')
+          .order('points', { ascending: false });
+        
+        if (teamsError) throw teamsError;
+        setTeams(teamsData || []);
+
+        // Fetch my team (mock logic for now or fetch based on membership)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // In a real app, you'd check a team_members table
+          const { data: myTeamData } = await supabase
+            .from('teams')
+            .select('*')
+            .limit(1)
+            .single(); // Placeholder: just get one team for the user
+          setMyTeam(myTeamData);
+        }
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
   return (
     <div className="min-h-screen bg-[#050816] text-white selection:bg-primary/30">
       <Navbar />
@@ -60,16 +90,22 @@ export default function TeamsPage() {
             </div>
             <div className="h-8 w-[1px] bg-white/5" />
             <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              {MOCK_TEAMS.length} squads active
+              {teams.length} squads active
             </div>
           </div>
         </div>
 
         {/* Team Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {MOCK_TEAMS.map((team, i) => (
-            <TeamCard key={i} team={team} delay={i * 0.1} />
-          ))}
+          {teams.length > 0 ? (
+            teams.map((team, i) => (
+              <TeamCard key={team.id || i} team={team} delay={i * 0.1} />
+            ))
+          ) : (
+            <div className="col-span-full p-20 border border-dashed border-white/10 text-center opacity-30 uppercase text-[10px] font-bold tracking-[0.5em]">
+              Scanning for active squads...
+            </div>
+          )}
         </div>
 
         {/* My Team Section (Quick Access) */}

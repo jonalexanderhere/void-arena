@@ -4,15 +4,15 @@ import { Shield, Bell, User, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function getProfile() {
-      const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     }
