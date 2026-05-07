@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 230 40% 5%;
+  --foreground: 0 0% 100%;
+  
+  --card: 230 40% 7%;
+  --card-foreground: 0 0% 100%;
+  
+  --popover: 230 40% 5%;
+  --popover-foreground: 0 0% 100%;
+  
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 230 40% 15%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 230 40% 15%;
+  --muted-foreground: 215 20% 65%;
+  
+  --accent: 250 89% 65%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 230 40% 15%;
+  --input: 230 40% 15%;
+  --ring: 221 83% 53%;
+  
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 230 40% 3%;
+  --foreground: 0 0% 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-[#050816] text-foreground font-sans;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+  
+  .glass-card {
+    @apply bg-[#0B1020]/80 backdrop-blur-md border border-white/5 hover:border-primary/50 transition-all duration-300;
+  }
+  
+  .esports-button {
+    @apply relative overflow-hidden bg-primary text-white font-bold uppercase tracking-widest px-8 py-4 
+           hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 active:scale-95;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  }
+
+  .esports-button-outline {
+    @apply relative overflow-hidden border border-white/20 text-white font-bold uppercase tracking-widest px-8 py-4 
+           hover:bg-white/10 transition-all duration-300;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  }
+  
+  .nav-link {
+    @apply text-sm font-medium text-zinc-400 hover:text-white transition-colors relative py-2;
+  }
+  
+  .nav-link::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300;
+  }
+  
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+}
+
+/* Animations */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.05), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+}
