@@ -24,12 +24,14 @@ export default function ChallengeDetailPage() {
 
   useEffect(() => {
     async function fetchChallenge() {
+      if (!id || Array.isArray(id)) return;
+      
       try {
         const supabase = getSupabase();
         const { data, error } = await supabase
           .from('challenges')
           .select('*')
-          .eq('id', id)
+          .eq('id', id as string)
           .single();
         
         if (error) throw error;

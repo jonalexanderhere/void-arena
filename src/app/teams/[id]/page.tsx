@@ -15,13 +15,15 @@ export default function TeamProfilePage() {
 
   useEffect(() => {
     async function fetchTeam() {
+      if (!id || Array.isArray(id)) return;
+      
       try {
         const supabase = getSupabase();
         // Here we'd ideally use a slug or name if 'id' is a string like 'phoenix-cysec'
         const { data, error } = await supabase
           .from('teams')
           .select('*')
-          .filter('name', 'ilike', id?.toString().replace('-', ' '))
+          .filter('name', 'ilike', (id as string).replace('-', ' '))
           .single();
         
         if (error) throw error;

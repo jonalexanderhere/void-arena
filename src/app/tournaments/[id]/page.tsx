@@ -17,6 +17,8 @@ export default function TournamentDetailPage() {
 
   useEffect(() => {
     async function fetchTournament() {
+      if (!id || Array.isArray(id)) return;
+      
       try {
         const supabase = getSupabase();
         
@@ -24,7 +26,7 @@ export default function TournamentDetailPage() {
         const { data: tourney, error } = await supabase
           .from('tournaments')
           .select('*')
-          .eq('id', id)
+          .eq('id', id as string)
           .single();
         
         if (error) throw error;
@@ -34,7 +36,7 @@ export default function TournamentDetailPage() {
         const { data: challs, error: challError } = await supabase
           .from('challenges')
           .select('*')
-          .eq('tournament_id', id); // Assuming simple FK for demo
+          .eq('tournament_id', id as string); // Assuming simple FK for demo
         
         if (!challError) setChallenges(challs || []);
 
