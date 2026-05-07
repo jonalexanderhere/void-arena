@@ -9,7 +9,7 @@ import {
   AlertCircle, CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Navbar } from '@/components/layout/Navbar';
 
 export default function ChallengeDetailPage() {
@@ -21,13 +21,13 @@ export default function ChallengeDetailPage() {
   const [flag, setFlag] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchChallenge() {
       if (!id || Array.isArray(id)) return;
       
       try {
-        const supabase = getSupabase();
         const { data, error } = await supabase
           .from('challenges')
           .select('*')
@@ -51,7 +51,6 @@ export default function ChallengeDetailPage() {
     setStatus(null);
 
     try {
-      const supabase = getSupabase();
       // In a real scenario, this would call an Edge Function or API route
       // to verify the flag securely against the database.
       const { data, error } = await (supabase as any).rpc('submit_flag', {

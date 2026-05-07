@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Users, Calendar, ChevronLeft, Terminal, Zap, Shield, Star } from 'lucide-react';
 import Link from 'next/link';
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Navbar } from '@/components/layout/Navbar';
 import { TournamentBracket } from '@/components/tournaments/Bracket';
 
@@ -14,14 +14,13 @@ export default function TournamentDetailPage() {
   const [tournament, setTournament] = useState<any>(null);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchTournament() {
       if (!id || Array.isArray(id)) return;
       
       try {
-        const supabase = getSupabase();
-        
         // Fetch tournament
         const { data: tourney, error } = await supabase
           .from('tournaments')

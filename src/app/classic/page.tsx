@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, Terminal, Search, Filter, Download, ExternalLink, Users, Star, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const CATEGORIES = [
   'All', 'Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Pwn', 'Forensics', 'OSINT', 'Cloud', 'Mobile', 'AI Security'
@@ -14,11 +14,11 @@ export default function ClassicModePage() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchChallenges() {
       try {
-        const supabase = getSupabase();
         let query = supabase.from('challenges').select('*');
         
         if (selectedCategory !== 'All') {

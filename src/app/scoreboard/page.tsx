@@ -5,17 +5,17 @@ import { Shield, Trophy, Users, Search, Filter, TrendingUp, Star, ChevronRight, 
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useState, useEffect } from 'react';
 
 export default function ScoreboardPage() {
   const [rankings, setRankings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchRankings() {
       try {
-        const supabase = getSupabase();
         const { data, error } = await supabase
           .from('teams')
           .select('*')

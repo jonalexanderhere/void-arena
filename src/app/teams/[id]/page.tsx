@@ -5,20 +5,20 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Trophy, Users, Star, Activity, Terminal, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Navbar } from '@/components/layout/Navbar';
 
 export default function TeamProfilePage() {
   const { id } = useParams();
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchTeam() {
       if (!id || Array.isArray(id)) return;
       
       try {
-        const supabase = getSupabase();
         // Here we'd ideally use a slug or name if 'id' is a string like 'phoenix-cysec'
         const { data, error } = await supabase
           .from('teams')

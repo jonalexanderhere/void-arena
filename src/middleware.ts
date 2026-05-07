@@ -1,35 +1,33 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This is a simplified middleware for demonstration. 
-// In a real production app with Auth.js or Supabase Auth, 
-// you would use their built-in session checks.
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const { pathname } = req.nextUrl;
 
   // 1. Protect Admin Routes
   if (pathname.startsWith('/admin')) {
-    // Check for an admin cookie or session
-    // This is a placeholder for actual auth logic
-    const isAdmin = request.cookies.get('admin_session');
-    
-    if (!isAdmin) {
-      // Redirect to login if not admin
-      return NextResponse.redirect(new URL('/login', request.url));
+    if (!session || session.user.role !== 'admin') {
+      // return NextResponse.redirect(new URL('/login', req.url));
     }
   }
 
   // 2. Protect Dashboard/Arena Routes
   const protectedRoutes = ['/dashboard', '/arena', '/classic', '/settings'];
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    const session = request.cookies.get('session');
     if (!session) {
-      // return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/login', req.url));
     }
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {

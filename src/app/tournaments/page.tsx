@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { TournamentBracket } from '@/components/tournaments/Bracket';
 
-import { getSupabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useState, useEffect } from 'react';
 
 export default function TournamentsPage() {
@@ -14,12 +14,11 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [joiningId, setJoiningId] = useState<number | null>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const supabase = getSupabase();
-        
         // Fetch user
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
@@ -49,7 +48,6 @@ export default function TournamentsPage() {
 
     setJoiningId(tournamentId);
     try {
-      const supabase = getSupabase();
       // Assume a table tournament_participants or an RPC join_tournament
       const { error } = await (supabase as any)
         .from('tournament_participants')
