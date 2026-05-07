@@ -1,10 +1,10 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import ChallengeDetailPage from './gh-injection/page'; // Reuse the layout
+import ClassicModePage from '../../page'; // Reuse listing layout until detail page is implemented
 
 export default function DynamicChallengePage() {
   const { id } = useParams();
-  // In a real app, fetch challenge data by ID here
-  return <ChallengeDetailPage />;
+  void id;
+  return <ClassicModePage />;
 }

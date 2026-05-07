@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabase() as any;
     const { challengeId, flag, teamId, userId } = await req.json();
 
     // 1. Fetch challenge

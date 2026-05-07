@@ -1,4 +1,5 @@
 import { AdminSidebar } from '@/components/admin/Sidebar';
+import { Filter, Plus, Search, Terminal } from 'lucide-react';
 
 export default function AdminChallenges() {
   return (
@@ -57,21 +58,5 @@ export default function AdminChallenges() {
         </div>
       </main>
     </div>
-  );
-}
-
-function AdminLink({ href, icon, label, active = false }: any) {
-  return (
-    <Link 
-      href={href} 
-      className={`flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
-        active 
-          ? 'bg-primary text-white italic italic italic rounded-none' 
-          : 'text-zinc-500 hover:text-white hover:bg-white/5'
-      }`}
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }

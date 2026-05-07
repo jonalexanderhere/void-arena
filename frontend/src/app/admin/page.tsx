@@ -1,4 +1,6 @@
 import { AdminSidebar } from '@/components/admin/Sidebar';
+import Link from 'next/link';
+import { Bell, Plus, Terminal, Trophy } from 'lucide-react';
 
 export default function AdminDashboard() {
   return (
