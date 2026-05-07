@@ -33,7 +33,7 @@ export default function TournamentDetailPage() {
         setTournament(tourney);
 
         // Fetch associated challenges (via a many-to-many link table or direct FK)
-        const { data: challs, error: challError } = await supabase
+        const { data: challs, error: challError } = await (supabase as any)
           .from('challenges')
           .select('*')
           .eq('tournament_id', id as string); // Assuming simple FK for demo

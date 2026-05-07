@@ -51,7 +51,7 @@ export default function TournamentsPage() {
     try {
       const supabase = getSupabase();
       // Assume a table tournament_participants or an RPC join_tournament
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tournament_participants')
         .insert({
           tournament_id: tournamentId,

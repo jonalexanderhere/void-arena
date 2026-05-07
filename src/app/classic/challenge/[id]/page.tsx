@@ -54,8 +54,8 @@ export default function ChallengeDetailPage() {
       const supabase = getSupabase();
       // In a real scenario, this would call an Edge Function or API route
       // to verify the flag securely against the database.
-      const { data, error } = await supabase.rpc('submit_flag', {
-        p_challenge_id: id,
+      const { data, error } = await (supabase as any).rpc('submit_flag', {
+        p_challenge_id: id as string,
         p_flag: flag,
         p_tournament_id: tid ? parseInt(tid) : null
       });

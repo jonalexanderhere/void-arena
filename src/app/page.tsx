@@ -136,7 +136,7 @@ export default function LandingPage() {
                   <span>Top Teams</span>
                   <span>Score</span>
                 </div>
-                {[].map((team, i) => (
+                {([] as any[]).map((team, i) => (
                   <div key={i} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 group-hover:border-white/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className="text-zinc-600 font-black italic">0{i+1}</span>
@@ -145,7 +145,7 @@ export default function LandingPage() {
                     <span className="font-mono text-sm font-bold">{team.score}</span>
                   </div>
                 ))}
-                {[].length === 0 && (
+                {([] as any[]).length === 0 && (
                   <div className="p-4 bg-white/5 border border-dashed border-white/10 text-center">
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">No Active Rankings</span>
                   </div>
@@ -156,7 +156,7 @@ export default function LandingPage() {
               <div className="space-y-3">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Recent Solves</div>
                 <div className="space-y-2">
-                  {[].map((solve, i) => (
+                  {([] as any[]).map((solve, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20">
                       <div className="p-1.5 bg-primary/20 rounded">
                         <Terminal className="w-3.5 h-3.5 text-primary" />
