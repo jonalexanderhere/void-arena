@@ -179,7 +179,7 @@ function ChallengeCard({ challenge, delay }: any) {
           <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">First Blood</div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-xs text-rose-500">
-              {challenge.firstBlood[0]}
+              {challenge?.firstBlood?.[0] || '?'}
             </div>
             <div>
               <div className="text-[11px] font-black italic text-white uppercase tracking-tight">{challenge.firstBlood}</div>

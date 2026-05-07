@@ -21,7 +21,7 @@ export default function ProfilePage() {
           </div>
           
           <div className="w-48 h-48 bg-[#050816] border-4 border-primary flex items-center justify-center font-black italic text-8xl text-primary shadow-[0_0_50px_rgba(59,130,246,0.3)] relative z-10">
-            {username?.[0].toUpperCase()}
+            {username?.[0]?.toUpperCase() || '?'}
           </div>
 
           <div className="flex-1 space-y-6 relative z-10">
