@@ -5,18 +5,33 @@ import { Shield, Trophy, Users, Search, Filter, TrendingUp, Star, ChevronRight, 
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 
-const MOCK_RANKINGS = [
-  { rank: 1, name: 'PHOENIX CYSEC', points: 12850, solves: 142, gold: 12, silver: 8, bronze: 5, trend: 'up' },
-  { rank: 2, name: 'RAVEN TEAM', points: 11420, solves: 128, gold: 8, silver: 12, bronze: 10, trend: 'down' },
-  { rank: 3, name: 'ZERO DAY', points: 10100, solves: 115, gold: 10, silver: 5, bronze: 12, trend: 'up' },
-  { rank: 4, name: 'HYDRA SEC', points: 9850, solves: 108, gold: 5, silver: 15, bronze: 8, trend: 'same' },
-  { rank: 5, name: 'VOID RUNNERS', points: 8700, solves: 94, gold: 4, silver: 6, bronze: 15, trend: 'up' },
-  { rank: 6, name: 'CYBER LORDS', points: 7900, solves: 86, gold: 3, silver: 8, bronze: 4, trend: 'down' },
-  { rank: 7, name: 'ROOT ACCESS', points: 7200, solves: 78, gold: 2, silver: 4, bronze: 9, trend: 'up' },
-  { rank: 8, name: 'GHOST SHELL', points: 6500, solves: 71, gold: 1, silver: 5, bronze: 3, trend: 'same' },
-];
+import { getSupabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 
 export default function ScoreboardPage() {
+  const [rankings, setRankings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRankings() {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('teams')
+          .select('*')
+          .order('points', { ascending: false });
+        
+        if (error) throw error;
+        setRankings(data || []);
+      } catch (err) {
+        console.error('Error fetching rankings:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRankings();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#050816] text-white selection:bg-primary/30">
       <Navbar />
@@ -53,11 +68,19 @@ export default function ScoreboardPage() {
         </div>
 
         {/* Top 3 Podium Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <PodiumCard team={MOCK_RANKINGS[1]} rank={2} />
-          <PodiumCard team={MOCK_RANKINGS[0]} rank={1} featured />
-          <PodiumCard team={MOCK_RANKINGS[2]} rank={3} />
-        </div>
+        {rankings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <PodiumCard team={rankings[1] || { name: '?' }} rank={2} />
+            <PodiumCard team={rankings[0] || { name: '?' }} rank={1} featured />
+            <PodiumCard team={rankings[2] || { name: '?' }} rank={3} />
+          </div>
+        ) : (
+          <div className="p-12 border border-dashed border-white/10 text-center glass-card">
+            <Trophy className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
+            <h3 className="text-xl font-black italic uppercase text-zinc-500">Arena Empty</h3>
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-2">No teams have registered for the global leaderboard yet.</p>
+          </div>
+        )}
 
         {/* Full Table */}
         <div className="glass-card rounded-none overflow-hidden border-white/5">
@@ -74,11 +97,11 @@ export default function ScoreboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {MOCK_RANKINGS.map((team, i) => (
+                {rankings.map((team, i) => (
                   <tr key={i} className="hover:bg-white/5 transition-colors group">
                     <td className="px-8 py-6">
                       <span className={`text-xl font-black italic ${i < 3 ? 'text-primary' : 'text-zinc-600'}`}>
-                        {team.rank.toString().padStart(2, '0')}
+                        {(i + 1).toString().padStart(2, '0')}
                       </span>
                     </td>
                     <td className="px-8 py-6">
@@ -91,7 +114,7 @@ export default function ScoreboardPage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold font-mono text-white">{team.solves}</span>
+                        <span className="text-sm font-bold font-mono text-white">{team.solves || 0}</span>
                         <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Total Captures</span>
                       </div>
                     </td>
@@ -99,21 +122,21 @@ export default function ScoreboardPage() {
                       <div className="flex gap-4">
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                          <span className="text-xs font-bold font-mono">{team.gold}</span>
+                          <span className="text-xs font-bold font-mono">{team.gold || 0}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full bg-zinc-400 shadow-[0_0_8px_rgba(161,161,170,0.5)]" />
-                          <span className="text-xs font-bold font-mono">{team.silver}</span>
+                          <span className="text-xs font-bold font-mono">{team.silver || 0}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full bg-orange-600 shadow-[0_0_8px_rgba(234,88,12,0.5)]" />
-                          <span className="text-xs font-bold font-mono">{team.bronze}</span>
+                          <span className="text-xs font-bold font-mono">{team.bronze || 0}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-xl font-black italic text-primary">{team.points.toLocaleString()}</span>
+                        <span className="text-xl font-black italic text-primary">{(team.points || 0).toLocaleString()}</span>
                         <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Aggregate Points</span>
                       </div>
                     </td>

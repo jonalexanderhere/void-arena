@@ -3,9 +3,21 @@
 import { Shield, Bell, User, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { getSupabase } from '@/lib/supabase';
 
 export function Navbar() {
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function getProfile() {
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    }
+    getProfile();
+  }, []);
 
   return (
     <nav className="h-20 border-b border-white/5 bg-[#050816]/80 backdrop-blur-xl fixed top-0 w-full z-50 px-6 flex items-center justify-between">
@@ -36,10 +48,14 @@ export function Navbar() {
         <div className="h-8 w-[1px] bg-white/5" />
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-black italic uppercase text-white tracking-tight">PhoenixCySec</p>
-            <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Rank #01</p>
+            <p className="text-xs font-black italic uppercase text-white tracking-tight">
+              {user?.email?.split('@')[0] || 'Recruit_00'}
+            </p>
+            <p className="text-[10px] text-primary font-bold uppercase tracking-widest">
+              {user ? 'Authenticated' : 'Guest Access'}
+            </p>
           </div>
-          <Link href="/dashboard" className="w-10 h-10 rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-primary hover:border-primary/50 transition-colors">
+          <Link href={user ? "/profile" : "/login"} className="w-10 h-10 rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-primary hover:border-primary/50 transition-colors">
             <User className="w-5 h-5" />
           </Link>
         </div>

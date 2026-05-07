@@ -136,11 +136,7 @@ export default function LandingPage() {
                   <span>Top Teams</span>
                   <span>Score</span>
                 </div>
-                {[
-                  { name: 'PHOENIX CYSEC', score: '2,850', color: 'text-primary' },
-                  { name: 'RAVEN TEAM', score: '2,420', color: 'text-white' },
-                  { name: 'ZERO DAY', score: '2,100', color: 'text-white' },
-                ].map((team, i) => (
+                {[].map((team, i) => (
                   <div key={i} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 group-hover:border-white/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className="text-zinc-600 font-black italic">0{i+1}</span>
@@ -149,34 +145,35 @@ export default function LandingPage() {
                     <span className="font-mono text-sm font-bold">{team.score}</span>
                   </div>
                 ))}
+                {[].length === 0 && (
+                  <div className="p-4 bg-white/5 border border-dashed border-white/10 text-center">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">No Active Rankings</span>
+                  </div>
+                )}
               </div>
 
               {/* Solve Feed */}
               <div className="space-y-3">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Recent Solves</div>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20">
-                    <div className="p-1.5 bg-primary/20 rounded">
-                      <Terminal className="w-3.5 h-3.5 text-primary" />
+                  {[].map((solve, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20">
+                      <div className="p-1.5 bg-primary/20 rounded">
+                        <Terminal className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="flex-1 text-[11px]">
+                        <span className="font-bold text-primary italic">{solve.team}</span>
+                        <span className="text-zinc-400"> captured </span>
+                        <span className="font-bold text-white italic">{solve.challenge}</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-zinc-600">{solve.time}</span>
                     </div>
-                    <div className="flex-1 text-[11px]">
-                      <span className="font-bold text-primary italic">PHOENIX_CYSEC</span>
-                      <span className="text-zinc-400"> captured </span>
-                      <span className="font-bold text-white italic">GHOST INJECTION</span>
+                  ))}
+                  {[].length === 0 && (
+                    <div className="p-4 bg-white/5 border border-dashed border-white/10 text-center">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Awaiting First Blood</span>
                     </div>
-                    <span className="text-[9px] font-bold text-zinc-600">2M AGO</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/5">
-                    <div className="p-1.5 bg-white/10 rounded">
-                      <Terminal className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <div className="flex-1 text-[11px]">
-                      <span className="font-bold text-white italic">RAVEN_TEAM</span>
-                      <span className="text-zinc-400"> solved </span>
-                      <span className="font-bold text-white italic">KERNEL ABYSS</span>
-                    </div>
-                    <span className="text-[9px] font-bold text-zinc-600">5M AGO</span>
-                  </div>
+                  )}
                 </div>
               </div>
 

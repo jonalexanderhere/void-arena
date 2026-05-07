@@ -35,9 +35,9 @@ export default function AdminDashboard() {
           <div className="p-10 space-y-10">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <QuickStat label="Active Challenges" value="48" trend="+4 new" />
-              <QuickStat label="Live Tournaments" value="3" trend="1 ending soon" />
-              <QuickStat label="Total Solves" value="1,242" trend="+124 today" />
+              <QuickStat label="Active Challenges" value="--" trend="No Active Data" />
+              <QuickStat label="Live Tournaments" value="--" trend="None Scheduled" />
+              <QuickStat label="Total Solves" value="--" trend="System Ready" />
               <QuickStat label="Reports" value="0" trend="Clear" success />
             </div>
 

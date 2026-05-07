@@ -9,17 +9,35 @@ const CATEGORIES = [
   'All', 'Web Exploitation', 'Cryptography', 'Reverse Engineering', 'Pwn', 'Forensics', 'OSINT', 'Cloud', 'Mobile', 'AI Security'
 ];
 
-const MOCK_CHALLENGES = [
-  { id: 1, title: 'Ghost Injection', category: 'Web', difficulty: 'Medium', points: 350, solves: 12, firstBlood: 'PhoenixCySec' },
-  { id: 2, title: 'Kernel Abyss', category: 'Pwn', difficulty: 'Hard', points: 480, solves: 3, firstBlood: 'RavenTeam' },
-  { id: 3, title: 'Vault 7', category: 'Crypto', difficulty: 'Easy', points: 150, solves: 45, firstBlood: 'ZeroDay' },
-  { id: 4, title: 'Firmware X', category: 'Reverse', difficulty: 'Insane', points: 500, solves: 1, firstBlood: 'Cyb3r_K1ng' },
-  { id: 5, title: 'Cloud Leaks', category: 'Cloud', difficulty: 'Medium', points: 320, solves: 18, firstBlood: 'H4ck3r' },
-  { id: 6, title: 'Mobile Spy', category: 'Mobile', difficulty: 'Hard', points: 420, solves: 7, firstBlood: 'DroidX' },
-];
+import { getSupabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 
 export default function ClassicModePage() {
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  useEffect(() => {
+    async function fetchChallenges() {
+      try {
+        const supabase = getSupabase();
+        let query = supabase.from('challenges').select('*');
+        
+        if (selectedCategory !== 'All') {
+          query = query.eq('category', selectedCategory);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        setChallenges(data || []);
+      } catch (err) {
+        console.error('Error fetching challenges:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChallenges();
+  }, [selectedCategory]);
 
   return (
     <div className="min-h-screen bg-[#050816] text-white">
@@ -100,17 +118,25 @@ export default function ClassicModePage() {
                 <Filter className="w-4 h-4 text-zinc-500" />
               </button>
               <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                Showing {MOCK_CHALLENGES.length} Challenges
+                Showing {challenges.length} Challenges
               </div>
             </div>
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {MOCK_CHALLENGES.map((chall, i) => (
-              <ChallengeCard key={chall.id} challenge={chall} delay={i * 0.1} />
-            ))}
-          </div>
+          {challenges.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {challenges.map((chall, i) => (
+                <ChallengeCard key={chall.id} challenge={chall} delay={i * 0.1} />
+              ))}
+            </div>
+          ) : (
+            <div className="p-20 border border-dashed border-white/10 text-center glass-card">
+              <Terminal className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
+              <h3 className="text-xl font-black italic uppercase text-zinc-500">System Offline</h3>
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-2">No challenges are currently available in this sector.</p>
+            </div>
+          )}
         </main>
       </div>
     </div>
@@ -174,9 +200,9 @@ function ChallengeCard({ challenge, delay }: any) {
             <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-primary" />
           </div>
         </div>
-        <button className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:translate-x-1 transition-transform">
+        <Link href={`/classic/challenge/${challenge.id}`} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:translate-x-1 transition-transform">
           View Detail <ChevronRight className="w-3 h-3" />
-        </button>
+        </Link>
       </div>
     </motion.div>
   );
