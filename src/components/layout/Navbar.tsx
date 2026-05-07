@@ -36,7 +36,6 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <NavLink href="/dashboard" label="Overview" active={pathname === '/dashboard'} />
           <NavLink href="/classic" label="Classic" active={pathname === '/classic'} />
-          <NavLink href="/arena" label="Arena" active={pathname === '/arena'} accent />
           <NavLink href="/tournaments" label="Tournaments" active={pathname === '/tournaments'} />
           <NavLink href="/scoreboard" label="Scoreboard" active={pathname === '/scoreboard'} />
         </div>

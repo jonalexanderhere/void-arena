@@ -39,7 +39,6 @@ export default function LandingPage() {
               <span className="text-2xl font-black tracking-tighter italic uppercase">VOID <span className="text-primary">ARENA</span></span>
             </Link>
             <div className="hidden md:flex items-center gap-6">
-              <Link href="/arena" className="nav-link uppercase tracking-widest text-xs">Arena</Link>
               <Link href="/classic" className="nav-link uppercase tracking-widest text-xs">Classic</Link>
               <Link href="/tournaments" className="nav-link uppercase tracking-widest text-xs">Tournaments</Link>
               <Link href="/scoreboard" className="nav-link uppercase tracking-widest text-xs">Scoreboard</Link>
@@ -103,8 +102,8 @@ export default function LandingPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-wrap items-center gap-6 pt-6"
           >
-            <Link href="/arena" className="esports-button flex items-center gap-2 group">
-              Enter Arena <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Link href={user ? "/dashboard" : "/login"} className="esports-button flex items-center gap-2 group">
+              {user ? 'Enter Dashboard' : 'Join Arena'} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link href="/tournaments" className="esports-button-outline">
               Watch Tournament

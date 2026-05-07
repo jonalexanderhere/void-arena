@@ -29,6 +29,7 @@ export default function AdminChallenges() {
     points: '100',
     category: 'Web Exploitation',
     difficulty: 'Easy',
+    flag: '',
     challenge_url: '',
     file_url: '',
     avatar_url: '',
@@ -76,6 +77,7 @@ export default function AdminChallenges() {
       points: '100',
       category: 'Web Exploitation',
       difficulty: 'Easy',
+      flag: '',
       challenge_url: '',
       file_url: '',
       avatar_url: '',
@@ -147,11 +149,11 @@ export default function AdminChallenges() {
               className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide"
             />
             <input
-              type="url"
-              value={form.avatar_url}
-              onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-              placeholder="https://cdn.example.com/challenge-cover.png"
-              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide"
+              type="text"
+              value={form.flag}
+              onChange={(e) => setForm({ ...form, flag: e.target.value })}
+              placeholder="FLAG{SET_REAL_FLAG}"
+              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-primary"
             />
           </div>
           <button onClick={createChallenge} className="esports-button flex items-center gap-2 !py-3 !px-8 !text-xs">

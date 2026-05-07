@@ -21,13 +21,25 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
-      router.push('/dashboard');
+      if (signInError) throw signInError;
+
+      // Check role for redirection
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign in. Please check your credentials.');
     } finally {

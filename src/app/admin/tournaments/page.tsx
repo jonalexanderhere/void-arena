@@ -13,11 +13,13 @@ export default function AdminTournaments() {
   const [formData, setFormData] = useState({
     name: '',
     status: 'Upcoming',
-    date: '',
+    start_date: '',
     prize: '',
     region: 'GLOBAL',
     description: '',
-    teams: 0
+    teams: 0,
+    participation_mode: 'Team',
+    banned_system_enabled: false
   });
   
   const supabase = createClientComponentClient();
@@ -66,7 +68,17 @@ export default function AdminTournaments() {
     if (!error) {
       setShowCreateModal(false);
       fetchTournaments();
-      setFormData({ name: '', status: 'Upcoming', date: '', prize: '', region: 'GLOBAL', description: '', teams: 0 });
+      setFormData({ 
+        name: '', 
+        status: 'Upcoming', 
+        start_date: '', 
+        prize: '', 
+        region: 'GLOBAL', 
+        description: '', 
+        teams: 0,
+        participation_mode: 'Team',
+        banned_system_enabled: false
+      });
     } else {
       alert('Error creating tournament: ' + error.message);
     }
@@ -229,6 +241,18 @@ export default function AdminTournaments() {
                     />
                   </div>
 
+                   <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Participation Mode</label>
+                    <select 
+                      value={formData.participation_mode}
+                      onChange={e => setFormData({...formData, participation_mode: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none"
+                    >
+                      <option value="Solo">SOLO (Individual)</option>
+                      <option value="Team">TEAM (Squad)</option>
+                    </select>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Status</label>
                     <select 
@@ -265,11 +289,23 @@ export default function AdminTournaments() {
                   <div className="col-span-2 space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Date / Time Info</label>
                     <input 
-                      value={formData.date}
-                      onChange={e => setFormData({...formData, date: e.target.value})}
+                      value={formData.start_date}
+                      onChange={e => setFormData({...formData, start_date: e.target.value})}
                       className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
                       placeholder="JUNE 02, 2026 • 18:00 UTC" 
                     />
+                  </div>
+
+                  <div className="col-span-2 space-y-2">
+                    <label className="flex items-center gap-3 p-4 bg-[#050816] border border-white/5 cursor-pointer hover:border-primary/50 transition-all">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.banned_system_enabled}
+                        onChange={e => setFormData({...formData, banned_system_enabled: e.target.checked})}
+                        className="w-5 h-5 accent-primary" 
+                      />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Enable Banned System (Draft Phase)</span>
+                    </label>
                   </div>
 
                   <div className="col-span-2 pt-6">

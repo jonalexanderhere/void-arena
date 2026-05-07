@@ -65,8 +65,18 @@ export default function TeamsPage() {
             <p className="text-zinc-500 font-medium max-w-xl uppercase tracking-widest text-xs">Join an existing squad or create your own to dominate the arena.</p>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <button className="esports-button !px-6 !py-3 flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            <div className="relative w-full sm:w-64">
+              <input 
+                type="text" 
+                placeholder="ENTER INVITE CODE..." 
+                className="w-full bg-[#0B1020] border border-white/5 px-6 py-3 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all"
+              />
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-primary hover:text-white transition-colors">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <button className="esports-button !px-6 !py-3 flex items-center gap-2 w-full sm:w-auto justify-center">
               <UserPlus className="w-4 h-4" /> Create Team
             </button>
           </div>
@@ -129,8 +139,15 @@ export default function TeamsPage() {
                 <TeamStat label="Win Rate" value="86%" />
               </div>
               <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 items-center">
                 <button className="esports-button !px-8 !py-3 !text-xs">Manage Roster</button>
-                <button className="esports-button-outline !px-8 !py-3 !text-xs">Invite Players</button>
+                <div className="px-4 py-2 bg-white/5 border border-dashed border-white/10 flex items-center gap-3">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">INVITE CODE:</span>
+                  <span className="text-sm font-black text-primary tracking-widest uppercase selection:bg-primary selection:text-white">
+                    {myTeam?.join_code || 'VOID-REF'}
+                  </span>
+                </div>
+              </div>
               </div>
             </div>
             <div className="w-full md:w-80 space-y-4">
