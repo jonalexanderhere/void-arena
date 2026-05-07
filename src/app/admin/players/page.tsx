@@ -1,7 +1,7 @@
 'use client';
 
 import { AdminSidebar } from "@/components/admin/Sidebar";
-import { Users, Search, Filter, Shield, Star, Activity, UserCog } from "lucide-react";
+import { Users, Search, Filter, Shield, Star, Activity, UserCog, Ban, CheckCircle } from "lucide-react";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useEffect, useState } from 'react';
 
@@ -20,6 +20,17 @@ export default function AdminPlayers() {
     
     if (!error) setPlayers(data || []);
     setLoading(false);
+  }
+
+  async function toggleBanned(id: string, currentStatus: boolean) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_banned: !currentStatus })
+      .eq('id', id);
+    
+    if (!error) {
+      fetchPlayers();
+    }
   }
 
   useEffect(() => {
@@ -87,6 +98,7 @@ export default function AdminPlayers() {
                 <th className="px-8 py-6">Role</th>
                 <th className="px-8 py-6">XP / Points</th>
                 <th className="px-8 py-6">Level</th>
+                <th className="px-8 py-6">Status</th>
                 <th className="px-8 py-6 text-right">Actions</th>
               </tr>
             </thead>
@@ -126,7 +138,21 @@ export default function AdminPlayers() {
                     </td>
                     <td className="px-8 py-5 text-xs font-black italic text-zinc-300">{p.points?.toLocaleString()} XP</td>
                     <td className="px-8 py-5 text-xs font-bold text-white">LVL {p.level || 1}</td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-8 py-5">
+                      <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest ${
+                        p.is_banned ? 'bg-rose-500/20 text-rose-500' : 'bg-emerald-500/20 text-emerald-500'
+                      }`}>
+                        {p.is_banned ? 'BANNED' : 'ACTIVE'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-right flex justify-end gap-2">
+                      <button 
+                        onClick={() => toggleBanned(p.id, p.is_banned)}
+                        className={`p-2 transition-colors ${p.is_banned ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-rose-500 hover:bg-rose-500/10'}`}
+                        title={p.is_banned ? "Unban Player" : "Ban Player"}
+                      >
+                        {p.is_banned ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                      </button>
                       <button className="p-2 hover:text-primary transition-colors">
                         <UserCog className="w-4 h-4" />
                       </button>

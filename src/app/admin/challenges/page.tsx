@@ -1,7 +1,7 @@
 'use client';
 
 import { AdminSidebar } from '@/components/admin/Sidebar';
-import { Filter, Plus, Search, Terminal } from 'lucide-react';
+import { Filter, Plus, Search, Terminal, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 type ChallengeItem = {
@@ -21,6 +21,7 @@ const difficulties = ['Easy', 'Medium', 'Hard', 'Insane', 'Elite'];
 
 export default function AdminChallenges() {
   const [list, setList] = useState<ChallengeItem[]>([]);
+  const [tournaments, setTournaments] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [form, setForm] = useState({
@@ -33,6 +34,7 @@ export default function AdminChallenges() {
     challenge_url: '',
     file_url: '',
     avatar_url: '',
+    tournament_id: '',
   });
 
   const load = async () => {
@@ -48,7 +50,14 @@ export default function AdminChallenges() {
 
   useEffect(() => {
     load();
+    fetchTournaments();
   }, []);
+
+  const fetchTournaments = async () => {
+    const res = await fetch('/api/tournaments');
+    const data = await res.json();
+    if (res.ok) setTournaments(data || []);
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -81,9 +90,25 @@ export default function AdminChallenges() {
       challenge_url: '',
       file_url: '',
       avatar_url: '',
+      tournament_id: '',
     });
     await load();
     setStatus('Challenge created with URL links (no binary upload).');
+  };
+
+  const deleteChallenge = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this challenge?')) return;
+    setStatus('Deleting challenge...');
+    const res = await fetch(`/api/challenges?id=${id}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(data?.error ?? 'Delete failed.');
+      return;
+    }
+    await load();
+    setStatus('Challenge deleted.');
   };
 
   return (
@@ -155,6 +180,16 @@ export default function AdminChallenges() {
               placeholder="FLAG{SET_REAL_FLAG}"
               className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-primary"
             />
+            <select
+              value={form.tournament_id}
+              onChange={(e) => setForm({ ...form, tournament_id: e.target.value })}
+              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400"
+            >
+              <option value="">NO TOURNAMENT (CLASSIC ONLY)</option>
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+              ))}
+            </select>
           </div>
           <button onClick={createChallenge} className="esports-button flex items-center gap-2 !py-3 !px-8 !text-xs">
             <Plus className="w-4 h-4" /> Create Challenge (URL Mode)
@@ -187,8 +222,9 @@ export default function AdminChallenges() {
                 <th className="px-8 py-6">Points</th>
                 <th className="px-8 py-6">Category</th>
                 <th className="px-8 py-6">Difficulty</th>
-                <th className="px-8 py-6">Challenge URL</th>
-                <th className="px-8 py-6">File URL</th>
+                <th className="px-8 py-6 text-primary">Flag</th>
+                <th className="px-8 py-6">Links</th>
+                <th className="px-8 py-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -196,15 +232,26 @@ export default function AdminChallenges() {
                 <tr key={row.id} className="bg-white/5">
                   <td className="px-8 py-4 text-[11px] font-mono">{row.id}</td>
                   <td className="px-8 py-4 text-[11px] font-bold uppercase">{row.title}</td>
-                  <td className="px-8 py-4 text-[11px] font-bold text-primary">{row.points}</td>
+                   <td className="px-8 py-4 text-[11px] font-bold text-primary">{row.points}</td>
                   <td className="px-8 py-4 text-[11px]">{row.category}</td>
                   <td className="px-8 py-4 text-[11px]">{row.difficulty}</td>
-                  <td className="px-8 py-4 text-[11px]"><a className="text-primary" href={row.challenge_url} target="_blank" rel="noreferrer">{row.challenge_url ? 'Open' : '-'}</a></td>
-                  <td className="px-8 py-4 text-[11px]"><a className="text-primary" href={row.file_url} target="_blank" rel="noreferrer">{row.file_url ? 'Open' : '-'}</a></td>
+                  <td className="px-8 py-4 text-[10px] font-mono text-zinc-500 uppercase tracking-tighter">{(row as any).flag || 'N/A'}</td>
+                  <td className="px-8 py-4 text-[11px] flex gap-2">
+                    <a className="text-primary hover:underline" href={row.challenge_url} target="_blank" rel="noreferrer">{row.challenge_url ? 'APP' : ''}</a>
+                    <a className="text-indigo-400 hover:underline" href={row.file_url} target="_blank" rel="noreferrer">{row.file_url ? 'FILE' : ''}</a>
+                  </td>
+                  <td className="px-8 py-4 text-right">
+                    <button 
+                      onClick={() => deleteChallenge(row.id)}
+                      className="p-2 text-rose-500 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               )) : (
                 <tr className="bg-white/5">
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={8} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <Terminal className="w-12 h-12 text-zinc-700 animate-pulse" />
                       <div className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">No Challenges Found</div>
