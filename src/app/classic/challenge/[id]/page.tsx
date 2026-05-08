@@ -2,15 +2,17 @@
 
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Terminal, Download, ExternalLink, 
   ChevronLeft, Trophy, Clock, Users, Send,
-  AlertCircle, CheckCircle2
+  AlertCircle, CheckCircle2, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Navbar } from '@/components/layout/Navbar';
+import { FirstBloodAlert } from '@/components/shared/FirstBloodAlert';
+import { detectProvider } from '@/lib/utils/storage';
 
 export default function ChallengeDetailPage() {
   const { id } = useParams();
@@ -21,27 +23,30 @@ export default function ChallengeDetailPage() {
   const [flag, setFlag] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [showFB, setShowFB] = useState(false);
+  const [fbInfo, setFbInfo] = useState<any>(null);
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    async function fetchChallenge() {
-      if (!id || Array.isArray(id)) return;
+  async function fetchChallenge() {
+    if (!id || Array.isArray(id)) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('challenges')
+        .select('*, challenge_files(*)')
+        .eq('id', id as string)
+        .single();
       
-      try {
-        const { data, error } = await supabase
-          .from('challenges')
-          .select('*')
-          .eq('id', id as string)
-          .single();
-        
-        if (error) throw error;
-        setChallenge(data);
-      } catch (err) {
-        console.error('Error fetching challenge:', err);
-      } finally {
-        setLoading(false);
-      }
+      if (error) throw error;
+      setChallenge(data);
+    } catch (err) {
+      console.error('Error fetching challenge:', err);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     if (id) fetchChallenge();
   }, [id]);
 
@@ -51,19 +56,39 @@ export default function ChallengeDetailPage() {
     setStatus(null);
 
     try {
-      const { data, error } = await (supabase as any).rpc('submit_flag', {
-        p_challenge_id: id as string,
-        p_flag: flag,
-        p_tournament_id: tid || null
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challengeId: id as string,
+          flag: flag.trim(),
+          tournamentId: tid || null,
+        }),
       });
+      const data = await res.json();
 
-      if (error) throw error;
+      if (!res.ok) {
+        setStatus({ type: 'error', message: data.error || 'System error occurred.' });
+        return;
+      }
 
-      if (data.success) {
-        setStatus({ type: 'success', message: data.message || 'CRITICAL HIT! Flag Captured Successfully.' });
+      if (data.correct) {
+        setStatus({
+          type: 'success',
+          message: data.firstBlood ? 'ACCESS GRANTED: First Blood secured!' : 'ACCESS GRANTED: Flag accepted.',
+        });
         setFlag('');
+
+        if (data.firstBlood) {
+          setFbInfo({
+            teamName: data.userName,
+            challengeName: data.challengeTitle,
+            points: data.points,
+          });
+          setShowFB(true);
+        }
       } else {
-        setStatus({ type: 'error', message: data.message || 'ACCESS DENIED: Invalid Flag Pattern.' });
+        setStatus({ type: 'error', message: 'ACCESS DENIED: Flag signature mismatch.' });
       }
     } catch (err: any) {
       setStatus({ type: 'error', message: err.message || 'System error during validation.' });
@@ -87,7 +112,7 @@ export default function ChallengeDetailPage() {
     return (
       <div className="min-h-screen bg-[#050816] text-white flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6" />
-        <h1 className="text-2xl font-black uppercase italic italic tracking-tight mb-2">Challenge Not Found</h1>
+        <h1 className="text-2xl font-black uppercase italic tracking-tight mb-2">Challenge Not Found</h1>
         <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8 text-center max-w-md">
           The requested data sector is unavailable or has been decommissioned.
         </p>
@@ -116,14 +141,14 @@ export default function ChallengeDetailPage() {
                   {challenge.category}
                 </span>
                 <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                  challenge.difficulty === 'Insane' ? 'text-rose-500' : 
-                  challenge.difficulty === 'Hard' ? 'text-amber-500' : 'text-emerald-500'
+                  challenge.difficulty === 'insane' ? 'text-rose-500' : 
+                  challenge.difficulty === 'hard' ? 'text-amber-500' : 'text-emerald-500'
                 }`}>
                   {challenge.difficulty} Difficulty
                 </span>
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tighter italic uppercase">{challenge.title}</h1>
-              <div className="flex flex-wrap items-center gap-8 pt-4">
+              <div className="flex flex-wrap items-center gap-8 pt-4 border-b border-white/5 pb-8">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">{challenge.points} Points</span>
@@ -141,30 +166,61 @@ export default function ChallengeDetailPage() {
 
             <div className="glass-card p-8 space-y-6">
               <h3 className="text-sm font-bold uppercase tracking-widest border-b border-white/5 pb-4">Briefing</h3>
-              <div className="prose prose-invert max-w-none text-zinc-400 text-sm leading-relaxed">
+              <div className="prose prose-invert max-w-none text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
                 {challenge.description || 'No description available for this mission.'}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass-card p-6 space-y-4 border-emerald-500/10">
-                <div className="flex items-center gap-3 text-emerald-500">
-                  <Terminal className="w-5 h-5" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest">Connection Info</h4>
+              {challenge.challenge_url && (
+                <div className="glass-card p-6 space-y-4 border-emerald-500/10">
+                  <div className="flex items-center gap-3 text-emerald-500">
+                    <Globe className="w-5 h-5" />
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest">Target Endpoint</h4>
+                  </div>
+                  <a 
+                    href={challenge.challenge_url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="block bg-black/50 p-4 font-mono text-xs text-zinc-300 border border-emerald-500/20 hover:border-emerald-500/50 transition-all truncate"
+                  >
+                    {challenge.challenge_url}
+                  </a>
                 </div>
-                <div className="bg-black/50 p-4 font-mono text-xs text-zinc-300 border border-white/5 break-all">
-                  {challenge.connection_info || 'nc void.arena 1337'}
+              )}
+              
+              {challenge.challenge_files?.length > 0 && (
+                <div className="glass-card p-6 space-y-4 border-primary/10">
+                  <div className="flex items-center gap-3 text-primary">
+                    <Download className="w-5 h-5" />
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest">Asset Resources</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {challenge.challenge_files.map((file: any) => {
+                      const provider = detectProvider(file.external_url);
+                      const Icon = provider.icon;
+                      return (
+                        <a 
+                          key={file.id} 
+                          href={file.external_url} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 border border-white/5 transition-all group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4 text-zinc-500 group-hover:text-primary transition-colors" />
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold uppercase tracking-widest">{file.file_name}</span>
+                              <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-tighter">{provider.name}</span>
+                            </div>
+                          </div>
+                          <Download className="w-3 h-3 text-zinc-600" />
+                        </a>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-              <div className="glass-card p-6 space-y-4">
-                <div className="flex items-center gap-3 text-primary">
-                  <Download className="w-5 h-5" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest">Resources</h4>
-                </div>
-                <button className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-[10px] font-bold uppercase tracking-widest">
-                  ChallengeFiles.zip <Download className="w-4 h-4" />
-                </button>
-              </div>
+              )}
             </div>
           </div>
 
@@ -173,18 +229,18 @@ export default function ChallengeDetailPage() {
             <div className="glass-card p-8 space-y-6 border-primary/20 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <h3 className="text-sm font-bold uppercase tracking-widest">Terminal Output</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest">Flag Submission</h3>
               </div>
               
               <form onSubmit={handleSubmitFlag} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Input Flag</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Flag Signature</label>
                   <input 
                     type="text" 
                     value={flag}
                     onChange={(e) => setFlag(e.target.value)}
                     placeholder="VOID{...}"
-                    className="w-full bg-[#050816] border border-white/10 px-4 py-3 text-sm font-mono focus:outline-none focus:border-primary transition-all"
+                    className="w-full bg-[#050816] border border-white/10 px-4 py-3 text-sm font-mono focus:outline-none focus:border-primary transition-all text-primary"
                     required
                   />
                 </div>
@@ -193,7 +249,7 @@ export default function ChallengeDetailPage() {
                   disabled={submitting}
                   className="esports-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {submitting ? 'Verifying...' : 'Submit Flag'} <Send className="w-4 h-4" />
+                  {submitting ? 'Verifying...' : 'Initiate Handshake'} <Send className="w-4 h-4" />
                 </button>
               </form>
 
@@ -216,26 +272,34 @@ export default function ChallengeDetailPage() {
             </div>
 
             <div className="glass-card p-8 space-y-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest border-b border-white/5 pb-4">First Blood</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest border-b border-white/5 pb-4">Operational First Blood</h3>
               {challenge.first_blood ? (
-                <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
-                  <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center text-[8px] font-black italic italic">
-                    {challenge?.first_blood?.[0] || '?'}
+                <div className="flex items-center gap-4 p-4 bg-[#0B1020] border border-white/5">
+                  <div className="w-12 h-12 bg-primary/10 border border-primary/20 flex items-center justify-center text-xl font-black italic text-primary">
+                    {challenge.first_blood[0]}
                   </div>
                   <div>
-                    <div className="text-lg font-black italic uppercase italic tracking-tight">{challenge.first_blood}</div>
-                    <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Mission Leader</div>
+                    <div className="text-xl font-black italic uppercase tracking-tight">{challenge.first_blood}</div>
+                    <div className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">MISSION CAPTAIN</div>
                   </div>
                 </div>
               ) : (
-                <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest italic">
-                  Awaiting first capture...
+                <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest italic text-center py-4 border border-dashed border-white/10">
+                  Awaiting initial penetration...
                 </div>
               )}
             </div>
           </div>
         </div>
       </main>
+
+      <FirstBloodAlert
+        show={showFB}
+        teamName={fbInfo?.teamName}
+        challengeName={fbInfo?.challengeName}
+        points={fbInfo?.points}
+        onDone={() => setShowFB(false)}
+      />
     </div>
   );
 }

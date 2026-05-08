@@ -184,8 +184,12 @@ function TeamCard({ team, delay }: any) {
       className="glass-card p-8 space-y-6 group cursor-pointer border-white/5 hover:border-primary/30 transition-all duration-500"
     >
       <div className="flex justify-between items-start">
-        <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center font-black italic text-2xl text-primary group-hover:border-primary/50 transition-colors">
-          {team?.name?.[0] || '?'}
+        <div className="w-16 h-16 bg-[#0B1020] border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-primary/50 transition-colors">
+          {team?.logo_url ? (
+            <img src={team.logo_url} className="w-full h-full object-cover" alt="Logo" />
+          ) : (
+            <span className="font-black italic text-2xl text-primary">{team?.name?.[0] || '?'}</span>
+          )}
         </div>
         <div className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest ${
           team?.status === 'Recruiting' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-500'

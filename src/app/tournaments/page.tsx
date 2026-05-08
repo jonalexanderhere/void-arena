@@ -187,45 +187,60 @@ function TournamentCard({ tournament, delay, onJoin, isJoining }: any) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className={`glass-card p-8 space-y-6 group hover:border-primary/30 transition-all duration-500 ${tournament.color || 'border-white/5'}`}
+      className="glass-card relative overflow-hidden group hover:border-primary/30 transition-all duration-500"
     >
-      <div className="flex items-center justify-between">
-        <div className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
-          tournament.status === 'Live' ? 'bg-primary/20 text-primary' : 
-          tournament.status === 'Upcoming' ? 'bg-indigo/20 text-indigo' : 'bg-zinc-800 text-zinc-500'
-        }`}>
-          {tournament.status}
-        </div>
-        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{tournament.region}</span>
-      </div>
-
-      <div className="space-y-1">
-        <h3 className="text-2xl font-black italic tracking-tighter uppercase group-hover:text-primary transition-colors">{tournament.name}</h3>
-        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{tournament.type}</p>
-      </div>
-
-      <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-6">
-        <div>
-          <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Schedule</div>
-          <div className="text-xs font-black italic uppercase">{tournament.date}</div>
-        </div>
-        <div>
-          <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Prize Pool</div>
-          <div className="text-xs font-black italic uppercase text-primary">{tournament.prize}</div>
+      {/* Thumbnail */}
+      <div className="h-40 w-full bg-[#0B1020] border-b border-white/5 relative overflow-hidden">
+        {tournament.thumbnail_url ? (
+          <img src={tournament.thumbnail_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Thumb" />
+        ) : (
+          <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
+             <Trophy className="w-12 h-12 text-zinc-800 opacity-20" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1020] to-transparent" />
+        <div className="absolute top-4 left-4">
+          <div className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
+            tournament.status === 'Live' ? 'bg-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 
+            tournament.status === 'Upcoming' ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-500'
+          }`}>
+            {tournament.status}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 pt-4">
-        <button 
-          onClick={onJoin}
-          disabled={isJoining || tournament.status === 'Completed'}
-          className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
-        >
-          {isJoining ? 'Processing...' : 'Register for Tournament'}
-        </button>
-        <Link href={`/tournaments/${tournament.id}`} className="w-full py-4 border border-white/10 hover:border-primary/50 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/5 text-center">
-          View Event Detail
-        </Link>
+      <div className="p-8 space-y-6">
+        <div className="space-y-1">
+          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex justify-between items-center">
+            <span>{tournament.region}</span>
+            <span>{tournament.type}</span>
+          </div>
+          <h3 className="text-2xl font-black italic tracking-tighter uppercase group-hover:text-primary transition-colors">{tournament.name}</h3>
+        </div>
+
+        <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-6">
+          <div>
+            <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Schedule</div>
+            <div className="text-xs font-black italic uppercase">{tournament.start_date || tournament.date}</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Prize Pool</div>
+            <div className="text-xs font-black italic uppercase text-primary">{tournament.prize}</div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 pt-4">
+          <button 
+            onClick={onJoin}
+            disabled={isJoining || tournament.status === 'Completed'}
+            className="w-full py-4 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+          >
+            {isJoining ? 'Processing...' : 'Register for Tournament'}
+          </button>
+          <Link href={`/tournaments/${tournament.id}`} className="w-full py-4 border border-white/10 hover:border-primary/50 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-primary/5 text-center">
+            View Event Detail
+          </Link>
+        </div>
       </div>
     </motion.div>
   );

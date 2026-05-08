@@ -19,9 +19,13 @@ export default function AdminTournaments() {
     description: '',
     teams: 0,
     participation_mode: 'Team',
-    banned_system_enabled: false
+    banned_system_enabled: false,
+    banner_url: '',
+    thumbnail_url: '',
+    livestream_url: '',
+    discord_url: ''
   });
-  
+
   const supabase = createClientComponentClient();
 
   async function fetchTournaments() {
@@ -77,7 +81,11 @@ export default function AdminTournaments() {
         description: '', 
         teams: 0,
         participation_mode: 'Team',
-        banned_system_enabled: false
+        banned_system_enabled: false,
+        banner_url: '',
+        thumbnail_url: '',
+        livestream_url: '',
+        discord_url: ''
       });
     } else {
       alert('Error creating tournament: ' + error.message);
@@ -90,8 +98,8 @@ export default function AdminTournaments() {
       <main className="flex-1 p-10 space-y-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-black italic uppercase italic tracking-tight">Tournament Control</h1>
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Manage circuit events, brackets, and participant settings.</p>
+            <h1 className="text-3xl font-black italic uppercase tracking-tight">Tournament Control</h1>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Manage circuit events, banners, and links via URLs.</p>
           </div>
           <button 
             onClick={() => setShowCreateModal(true)}
@@ -158,8 +166,12 @@ export default function AdminTournaments() {
                   <tr key={t.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black italic text-xs">
-                          {t.name[0]}
+                        <div className="w-10 h-10 bg-[#0B1020] border border-white/10 flex items-center justify-center overflow-hidden">
+                          {t.thumbnail_url ? (
+                            <img src={t.thumbnail_url} className="w-full h-full object-cover" alt="Thumb" />
+                          ) : (
+                            <span className="text-primary font-black italic text-xs">{t.name[0]}</span>
+                          )}
                         </div>
                         <span className="font-bold italic uppercase tracking-tight text-white">{t.name}</span>
                       </div>
@@ -190,19 +202,19 @@ export default function AdminTournaments() {
         {/* Create Modal */}
         <AnimatePresence>
           {showCreateModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 overflow-y-auto">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowCreateModal(false)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm" 
               />
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative glass-card w-full max-w-2xl overflow-hidden bg-[#0B1020]"
+                className="relative glass-card w-full max-w-2xl overflow-hidden bg-[#0B1020] my-8"
               >
                 <div className="p-8 border-b border-white/5 flex justify-between items-center bg-[#050816]">
                   <div className="flex items-center gap-4">
@@ -210,7 +222,7 @@ export default function AdminTournaments() {
                       <Trophy className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-black italic uppercase italic tracking-tight">Create New Circuit</h2>
+                      <h2 className="text-xl font-black italic uppercase tracking-tight">Create New Circuit</h2>
                       <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Configure event parameters and logic.</p>
                     </div>
                   </div>
@@ -219,15 +231,55 @@ export default function AdminTournaments() {
                   </button>
                 </div>
 
-                <form onSubmit={handleCreate} className="p-8 grid grid-cols-2 gap-6">
+                <form onSubmit={handleCreate} className="p-8 grid grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
                   <div className="col-span-2 space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Tournament Name</label>
                     <input 
                       required
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none" 
                       placeholder="E.G. GLOBAL INVITATIONAL 2026" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Banner URL</label>
+                    <input 
+                      value={formData.banner_url}
+                      onChange={e => setFormData({...formData, banner_url: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-[10px] font-bold uppercase focus:border-primary transition-all outline-none" 
+                      placeholder="https://imgur.com/banner.png" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Thumbnail URL</label>
+                    <input 
+                      value={formData.thumbnail_url}
+                      onChange={e => setFormData({...formData, thumbnail_url: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-[10px] font-bold uppercase focus:border-primary transition-all outline-none" 
+                      placeholder="https://imgur.com/thumb.png" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Livestream URL</label>
+                    <input 
+                      value={formData.livestream_url}
+                      onChange={e => setFormData({...formData, livestream_url: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-[10px] font-bold uppercase focus:border-primary transition-all outline-none" 
+                      placeholder="https://twitch.tv/voidarena" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Discord URL</label>
+                    <input 
+                      value={formData.discord_url}
+                      onChange={e => setFormData({...formData, discord_url: e.target.value})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-[10px] font-bold uppercase focus:border-primary transition-all outline-none" 
+                      placeholder="https://discord.gg/voidarena" 
                     />
                   </div>
                   
@@ -236,7 +288,7 @@ export default function AdminTournaments() {
                     <input 
                       value={formData.region}
                       onChange={e => setFormData({...formData, region: e.target.value})}
-                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none" 
                       placeholder="APAC / GLOBAL" 
                     />
                   </div>
@@ -271,8 +323,8 @@ export default function AdminTournaments() {
                     <input 
                       type="number" 
                       value={formData.teams}
-                      onChange={e => setFormData({...formData, teams: parseInt(e.target.value)})}
-                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      onChange={e => setFormData({...formData, teams: parseInt(e.target.value) || 0})}
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none" 
                     />
                   </div>
 
@@ -281,7 +333,7 @@ export default function AdminTournaments() {
                     <input 
                       value={formData.prize}
                       onChange={e => setFormData({...formData, prize: e.target.value})}
-                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none" 
                       placeholder="50,000 USD" 
                     />
                   </div>
@@ -291,7 +343,7 @@ export default function AdminTournaments() {
                     <input 
                       value={formData.start_date}
                       onChange={e => setFormData({...formData, start_date: e.target.value})}
-                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all" 
+                      className="w-full bg-[#050816] border border-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none" 
                       placeholder="JUNE 02, 2026 • 18:00 UTC" 
                     />
                   </div>

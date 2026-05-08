@@ -1,8 +1,9 @@
 'use client';
 
 import { AdminSidebar } from '@/components/admin/Sidebar';
-import { Filter, Plus, Search, Terminal, Trash2 } from 'lucide-react';
+import { Filter, Plus, Search, Terminal, Trash2, Globe, Download } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { detectProvider } from '@/lib/utils/storage';
 
 type ChallengeItem = {
   id: string;
@@ -159,31 +160,49 @@ export default function AdminChallenges() {
             >
               {difficulties.map((x) => <option key={x}>{x}</option>)}
             </select>
-            <input
-              type="url"
-              value={form.challenge_url}
-              onChange={(e) => setForm({ ...form, challenge_url: e.target.value })}
-              placeholder="https://challenge.example.com"
-              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide"
-            />
-            <input
-              type="url"
-              value={form.file_url}
-              onChange={(e) => setForm({ ...form, file_url: e.target.value })}
-              placeholder="https://cdn.example.com/challenge.zip"
-              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide"
-            />
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Resource Links (URL Only)</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={form.challenge_url}
+                    onChange={(e) => setForm({ ...form, challenge_url: e.target.value })}
+                    placeholder="CHALLENGE ENDPOINT (E.G. HTTPS://CHALLENGE.VOID.ARENA)"
+                    className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide outline-none focus:border-primary/50"
+                  />
+                  <Globe className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                </div>
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={form.file_url}
+                    onChange={(e) => setForm({ ...form, file_url: e.target.value })}
+                    placeholder="DOWNLOAD LINK (GDRIVE, MEDIAFIRE, DROPBOX...)"
+                    className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold tracking-wide outline-none focus:border-primary/50"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {form.file_url && (
+                      <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">
+                        {detectProvider(form.file_url).name}
+                      </span>
+                    )}
+                    <Download className="w-4 h-4 text-zinc-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
             <input
               type="text"
               value={form.flag}
               onChange={(e) => setForm({ ...form, flag: e.target.value })}
               placeholder="FLAG{SET_REAL_FLAG}"
-              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-primary"
+              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-primary outline-none focus:border-primary"
             />
             <select
               value={form.tournament_id}
               onChange={(e) => setForm({ ...form, tournament_id: e.target.value })}
-              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400"
+              className="w-full bg-[#0B1020] border border-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 outline-none focus:border-primary"
             >
               <option value="">NO TOURNAMENT (CLASSIC ONLY)</option>
               {tournaments.map((t) => (
@@ -192,7 +211,7 @@ export default function AdminChallenges() {
             </select>
           </div>
           <button onClick={createChallenge} className="esports-button flex items-center gap-2 !py-3 !px-8 !text-xs">
-            <Plus className="w-4 h-4" /> Create Challenge (URL Mode)
+            <Plus className="w-4 h-4" /> Initialize Neural Challenge
           </button>
           {status ? <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{status}</p> : null}
         </div>

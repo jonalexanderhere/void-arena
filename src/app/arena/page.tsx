@@ -1,9 +1,11 @@
-﻿'use client';
+'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, ChevronRight, Clock, Download, ExternalLink, Terminal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useSoundEffects } from '@/components/arena/SoundManager';
+import { FirstBloodAlert } from '@/components/shared/FirstBloodAlert';
+import { useFirstBlood } from '@/hooks/useFirstBlood';
+import { detectProvider } from '@/lib/utils/storage';
 
 type Challenge = {
   id: string;
@@ -15,6 +17,7 @@ type Challenge = {
   challenge_url?: string | null;
   file_url?: string | null;
   files?: string[] | null;
+  challenge_files?: any[];
 };
 
 export default function ArenaHUD() {
@@ -24,7 +27,8 @@ export default function ArenaHUD() {
   const [status, setStatus] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [showFirstBlood, setShowFirstBlood] = useState(false);
-  const { playSound } = useSoundEffects();
+  const [fbData, setFbData] = useState<any>(null);
+  const { showAlert: realtimeFB, fbData: realtimeFbData, triggerFirstBlood, dismissAlert } = useFirstBlood();
 
   const active = useMemo(() => challenges.find((c) => c.id === activeId) ?? null, [challenges, activeId]);
 
@@ -77,9 +81,12 @@ export default function ArenaHUD() {
     if (data.correct) {
       setStatus(data.firstBlood ? 'Correct! FIRST BLOOD secured.' : 'Correct flag submitted.');
       if (data.firstBlood) {
+        setFbData({
+          teamName: data.userName,
+          challengeName: data.challengeTitle,
+          points: data.points,
+        });
         setShowFirstBlood(true);
-        playSound('FIRST_BLOOD');
-        setTimeout(() => setShowFirstBlood(false), 4500);
       }
       setFlag('');
       return;
@@ -133,13 +140,56 @@ export default function ArenaHUD() {
               ))}
             </div>
 
-            <div className="space-y-2">
-              <a href={downloadUrl || '#'} target="_blank" rel="noreferrer" className="w-full esports-button !py-3 !text-[10px] inline-flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> Download File
-              </a>
-              <a href={active?.challenge_url || '#'} target="_blank" rel="noreferrer" className="w-full esports-button-outline !py-3 !text-[10px] inline-flex items-center justify-center gap-2">
-                <ExternalLink className="w-4 h-4" /> Open Challenge URL
-              </a>
+            <div className="space-y-3 pt-4 border-t border-white/5">
+              {active?.challenge_files && active.challenge_files.length > 0 ? (
+                active.challenge_files.map((file: any) => {
+                  const provider = detectProvider(file.external_url);
+                  const Icon = provider.icon;
+                  return (
+                    <div key={file.id} className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 group hover:border-primary/50 transition-all">
+                      <div className="p-2 bg-black/40 text-zinc-400 group-hover:text-primary transition-colors">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{provider.name}</div>
+                        <div className="text-[10px] font-black uppercase truncate">{file.file_name}</div>
+                      </div>
+                      <a 
+                        href={file.external_url} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all rounded-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  );
+                })
+              ) : active?.file_url ? (
+                <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 group hover:border-primary/50 transition-all">
+                  <div className="p-2 bg-black/40 text-zinc-400 group-hover:text-primary transition-colors">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">EXTERNAL FILE</div>
+                    <div className="text-[10px] font-black uppercase truncate">Download Assets</div>
+                  </div>
+                  <a 
+                    href={active.file_url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all rounded-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                  </a>
+                </div>
+              ) : null}
+
+              {active?.challenge_url && (
+                <a href={active.challenge_url} target="_blank" rel="noreferrer" className="w-full esports-button-outline !py-3 !text-[10px] inline-flex items-center justify-center gap-2">
+                  <ExternalLink className="w-4 h-4" /> Open Challenge URL
+                </a>
+              )}
             </div>
           </div>
 
@@ -175,17 +225,27 @@ export default function ArenaHUD() {
               </button>
             </div>
 
-            <AnimatePresence>
-              {showFirstBlood && (
-                <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.5 }} className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
-                  <div className="absolute inset-0 bg-rose-900/40 backdrop-blur-sm animate-pulse" />
-                  <div className="relative text-rose-500 font-black italic text-7xl tracking-tighter uppercase skew-x-[-12deg]">FIRST BLOOD</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         </section>
       </main>
+
+      {/* First Blood alert from local solve */}
+      <FirstBloodAlert
+        show={showFirstBlood}
+        teamName={fbData?.teamName}
+        challengeName={fbData?.challengeName}
+        points={fbData?.points}
+        onDone={() => setShowFirstBlood(false)}
+      />
+
+      {/* First Blood alert from realtime notifications (other users' solves) */}
+      <FirstBloodAlert
+        show={realtimeFB}
+        teamName={realtimeFbData?.teamName}
+        challengeName={realtimeFbData?.challengeName}
+        points={realtimeFbData?.points}
+        onDone={dismissAlert}
+      />
     </div>
   );
 }

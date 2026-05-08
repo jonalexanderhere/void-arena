@@ -14,8 +14,13 @@ export async function middleware(req: NextRequest) {
 
   // 1. Protect Admin Routes
   if (pathname.startsWith('/admin')) {
-    if (!session || session.user.role !== 'admin') {
-      // return NextResponse.redirect(new URL('/login', req.url));
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+    // Check role via user_metadata or a profiles table lookup
+    const role = session.user?.user_metadata?.role ?? session.user?.role;
+    if (role !== 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
     }
   }
 
