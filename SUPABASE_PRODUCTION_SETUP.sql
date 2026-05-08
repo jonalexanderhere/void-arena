@@ -3,32 +3,9 @@
 -- This script will DROP and RECREATE all tables
 -- ==========================================
 
--- 0. CLEANUP (Drop existing tables and types)
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS on_submission_correct ON public.submissions;
-DROP FUNCTION IF EXISTS public.handle_new_user();
-DROP FUNCTION IF EXISTS public.handle_points_update();
-
-DROP TABLE IF EXISTS public.notifications CASCADE;
-DROP TABLE IF EXISTS public.first_bloods CASCADE;
-DROP TABLE IF EXISTS public.match_history CASCADE;
-DROP TABLE IF EXISTS public.arena_activity_feed CASCADE;
-DROP TABLE IF EXISTS public.submissions CASCADE;
-DROP TABLE IF EXISTS public.challenge_files CASCADE;
-DROP TABLE IF EXISTS public.tournament_participants CASCADE;
-DROP TABLE IF EXISTS public.challenges CASCADE;
-DROP TABLE IF EXISTS public.tournaments CASCADE;
-DROP TABLE IF EXISTS public.teams CASCADE;
-DROP TABLE IF EXISTS public.profiles CASCADE;
-
-DROP TYPE IF EXISTS user_role CASCADE;
-
 -- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- 2. TYPES
-CREATE TYPE user_role AS ENUM ('player', 'admin');
 
 -- 3. TABLES
 
@@ -40,7 +17,7 @@ CREATE TABLE public.profiles (
     avatar_url TEXT,
     banner_url TEXT,
     social_links JSONB DEFAULT '{}'::jsonb,
-    role user_role DEFAULT 'player',
+    role TEXT DEFAULT 'player' CHECK (role IN ('player', 'admin')),
     points INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
     xp INTEGER DEFAULT 0,
@@ -267,8 +244,17 @@ BEGIN
         new.id,
         COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
         new.raw_user_meta_data->>'full_name',
-        COALESCE((new.raw_user_meta_data->>'role')::user_role, 'player'::user_role)
+        'player' -- Default to player for safety
     );
+    
+    -- Try to update role if metadata has it
+    IF (new.raw_user_meta_data->>'role' = 'admin') THEN
+        UPDATE public.profiles SET role = 'admin' WHERE id = new.id;
+    END IF;
+    
+    RETURN new;
+EXCEPTION WHEN OTHERS THEN
+    -- Even if it fails, let the user sign up
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
