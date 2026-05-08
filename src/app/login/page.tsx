@@ -29,7 +29,7 @@ export default function LoginPage() {
       if (signInError) throw signInError;
 
       // Check role for redirection
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user?.id)
