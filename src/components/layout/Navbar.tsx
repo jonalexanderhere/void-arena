@@ -59,6 +59,17 @@ export function Navbar() {
           <Link href={user ? "/profile" : "/login"} className="w-10 h-10 rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-primary hover:border-primary/50 transition-colors">
             <User className="w-5 h-5" />
           </Link>
+          {user && (
+            <button 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/login';
+              }}
+              className="p-2 text-rose-500 hover:text-rose-400 hover:bg-rose-500/5 transition-all text-[10px] font-black uppercase tracking-widest border border-rose-500/10"
+            >
+              Log Out
+            </button>
+          )}
         </div>
       </div>
     </nav>

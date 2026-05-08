@@ -4,6 +4,7 @@
 
 -- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. TABLES
 -- PROFILES (Users)
@@ -20,6 +21,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     bio TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Ensure columns exist if table was created previously
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'player';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
 
 -- TEAMS
 CREATE TABLE IF NOT EXISTS public.teams (
@@ -138,28 +144,55 @@ ALTER TABLE public.first_bloods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Public read access
+DROP POLICY IF EXISTS "Public read profiles" ON public.profiles;
 CREATE POLICY "Public read profiles" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read teams" ON public.teams;
 CREATE POLICY "Public read teams" ON public.teams FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read tournaments" ON public.tournaments;
 CREATE POLICY "Public read tournaments" ON public.tournaments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read challenges" ON public.challenges;
 CREATE POLICY "Public read challenges" ON public.challenges FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read challenge_files" ON public.challenge_files;
 CREATE POLICY "Public read challenge_files" ON public.challenge_files FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read participants" ON public.tournament_participants;
 CREATE POLICY "Public read participants" ON public.tournament_participants FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read submissions" ON public.submissions;
 CREATE POLICY "Public read submissions" ON public.submissions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read first_bloods" ON public.first_bloods;
 CREATE POLICY "Public read first_bloods" ON public.first_bloods FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read notifications" ON public.notifications;
 CREATE POLICY "Public read notifications" ON public.notifications FOR SELECT USING (true);
 
 -- User policies
+DROP POLICY IF EXISTS "Users can join tournaments" ON public.tournament_participants;
 CREATE POLICY "Users can join tournaments" ON public.tournament_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can submit flags" ON public.submissions;
 CREATE POLICY "Users can submit flags" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Admin write access
+DROP POLICY IF EXISTS "Admin write tournaments" ON public.tournaments;
 CREATE POLICY "Admin write tournaments" ON public.tournaments FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
+DROP POLICY IF EXISTS "Admin write challenges" ON public.challenges;
 CREATE POLICY "Admin write challenges" ON public.challenges FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
+DROP POLICY IF EXISTS "Admin write challenge_files" ON public.challenge_files;
 CREATE POLICY "Admin write challenge_files" ON public.challenge_files FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
@@ -185,6 +218,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_submission_correct ON public.submissions;
 CREATE TRIGGER on_submission_correct
     AFTER INSERT OR UPDATE ON public.submissions
     FOR EACH ROW EXECUTE PROCEDURE public.handle_points_update();
@@ -198,7 +232,7 @@ BEGIN
         new.id,
         new.raw_user_meta_data->>'username',
         new.raw_user_meta_data->>'full_name',
-        COALESCE(new.raw_user_meta_data->>'role', 'player')
+        COALESCE((new.raw_user_meta_data->>'role')::text, 'player')::user_role
     );
     RETURN new;
 END;
@@ -209,5 +243,11 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- 5. INITIAL DATA (Make your user an admin)
+-- 5. INITIAL DATA / ADMIN MANAGEMENT
+-- To promote a user to admin manually, run the following in your Supabase SQL Editor:
+-- UPDATE public.profiles SET role = 'admin' WHERE username = 'YOUR_USERNAME';
+-- OR
+-- UPDATE public.profiles SET role = 'admin' WHERE id = 'USER_UUID_FROM_AUTH';
+
+-- Example: Set default admin if you have a specific username
 -- UPDATE public.profiles SET role = 'admin' WHERE username = 'CYBER_PHOENIX';

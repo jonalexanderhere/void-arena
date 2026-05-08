@@ -9,9 +9,21 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    }
   }
 
-  // URL to redirect to after sign in process completes
+  // Default redirect to player dashboard
   return NextResponse.redirect(new URL('/dashboard', request.url));
 }
