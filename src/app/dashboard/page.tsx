@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
-import { Activity, Clock, ExternalLink, Shield, Star, Terminal, Trophy, Users, Zap } from 'lucide-react';
+import { Activity, Clock, ExternalLink, Shield, Star, Terminal, Trophy, Users, Zap, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type DashboardData = {
   profile: { username: string; avatar_url: string | null; bio: string; level: number; progress: number };
@@ -14,6 +15,12 @@ type DashboardData = {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
+  const supabase = createClientComponentClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
 
   useEffect(() => {
     const run = async () => {
@@ -31,8 +38,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#050816] text-white selection:bg-primary/30">
       <div className="flex">
-        <aside className="w-64 min-h-screen border-r border-white/5 bg-[#0B1020]/50 backdrop-blur-xl hidden lg:block sticky top-0">
-          <div className="p-6">
+        <aside className="w-64 min-h-screen border-r border-white/5 bg-[#0B1020]/50 backdrop-blur-xl hidden lg:flex flex-col sticky top-0">
+          <div className="p-6 flex-1">
             <Link href="/" className="flex items-center gap-2 mb-12 group">
               <div className="w-8 h-8 bg-primary flex items-center justify-center rotate-45"><Shield className="w-5 h-5 -rotate-45" /></div>
               <span className="text-xl font-black tracking-tighter italic uppercase">VOID</span>
@@ -45,6 +52,16 @@ export default function DashboardPage() {
               <SidebarLink href="/teams" icon={<Users className="w-4 h-4" />} label="My Team" />
               <SidebarLink href="/settings" icon={<Clock className="w-4 h-4" />} label="Settings" />
             </nav>
+          </div>
+          
+          <div className="p-4 border-t border-white/5">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 transition-all group"
+            >
+              <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              Sign Out
+            </button>
           </div>
         </aside>
 

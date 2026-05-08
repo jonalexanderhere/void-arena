@@ -1,8 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, ChevronRight, Clock, Download, ExternalLink, Terminal } from 'lucide-react';
+import { AlertCircle, ChevronRight, Clock, Download, ExternalLink, Terminal, LogOut } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { FirstBloodAlert } from '@/components/shared/FirstBloodAlert';
 import { useFirstBlood } from '@/hooks/useFirstBlood';
 import { detectProvider } from '@/lib/utils/storage';
@@ -29,6 +31,12 @@ export default function ArenaHUD() {
   const [showFirstBlood, setShowFirstBlood] = useState(false);
   const [fbData, setFbData] = useState<any>(null);
   const { showAlert: realtimeFB, fbData: realtimeFbData, triggerFirstBlood, dismissAlert } = useFirstBlood();
+  const supabase = createClientComponentClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
 
   const active = useMemo(() => challenges.find((c) => c.id === activeId) ?? null, [challenges, activeId]);
 
@@ -102,15 +110,34 @@ export default function ArenaHUD() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.1),transparent)] pointer-events-none" />
       <div className="absolute inset-0 scanline opacity-10 pointer-events-none" />
 
-      <header className="fixed top-0 left-0 w-full z-50 p-6 flex justify-center">
+      <header className="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center px-10">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="w-10 h-10 bg-primary flex items-center justify-center rotate-45 hover:scale-110 transition-transform">
+            <Terminal className="w-6 h-6 -rotate-45" />
+          </Link>
+          <div className="hidden md:block">
+            <h2 className="text-sm font-black tracking-tighter italic uppercase">Arena <span className="text-primary">HUD</span></h2>
+            <div className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest">Tactical Environment v2.4</div>
+          </div>
+        </div>
+
         <div className="glass-card px-8 py-3 border-white/10 flex items-center gap-6">
-          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Arena Timer</div>
+          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Timer</div>
           <div className="text-3xl font-mono font-bold tracking-widest text-white flex items-center gap-2">
             <Clock className="w-5 h-5 text-primary" />
             {formatTime(timeLeft)}
           </div>
+          <div className="h-8 w-[1px] bg-white/5" />
           <div className="text-[10px] font-bold text-primary uppercase tracking-widest">{active?.difficulty ?? 'N/A'} · {active?.category ?? 'N/A'}</div>
         </div>
+
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-[10px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all group"
+        >
+          <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          <span className="hidden md:inline">Abort Mission</span>
+        </button>
       </header>
 
       <main className="pt-32 pb-24 px-6 h-full flex gap-6">
