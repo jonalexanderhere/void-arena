@@ -1,21 +1,39 @@
 -- ==========================================
--- VOID ARENA COMPREHENSIVE PRODUCTION SETUP
+-- VOID ARENA COMPREHENSIVE PRODUCTION OVERHAUL
+-- This script will DROP and RECREATE all tables
 -- ==========================================
+
+-- 0. CLEANUP (Drop existing tables and types)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_submission_correct ON public.submissions;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.handle_points_update();
+
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.first_bloods CASCADE;
+DROP TABLE IF EXISTS public.match_history CASCADE;
+DROP TABLE IF EXISTS public.arena_activity_feed CASCADE;
+DROP TABLE IF EXISTS public.submissions CASCADE;
+DROP TABLE IF EXISTS public.challenge_files CASCADE;
+DROP TABLE IF EXISTS public.tournament_participants CASCADE;
+DROP TABLE IF EXISTS public.challenges CASCADE;
+DROP TABLE IF EXISTS public.tournaments CASCADE;
+DROP TABLE IF EXISTS public.teams CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
+DROP TYPE IF EXISTS user_role CASCADE;
 
 -- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. TABLES
--- TYPES
-DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('player', 'admin');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- 2. TYPES
+CREATE TYPE user_role AS ENUM ('player', 'admin');
+
+-- 3. TABLES
 
 -- PROFILES (Users)
-CREATE TABLE IF NOT EXISTS public.profiles (
+CREATE TABLE public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE,
     full_name TEXT,
@@ -30,15 +48,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Ensure columns exist if table was created previously
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT; -- Fallback
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS xp INTEGER DEFAULT 0;
-
 -- TEAMS
-CREATE TABLE IF NOT EXISTS public.teams (
+CREATE TABLE public.teams (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL UNIQUE,
     description TEXT,
@@ -57,7 +68,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
 );
 
 -- TOURNAMENTS
-CREATE TABLE IF NOT EXISTS public.tournaments (
+CREATE TABLE public.tournaments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     description TEXT,
@@ -76,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.tournaments (
 );
 
 -- CHALLENGES
-CREATE TABLE IF NOT EXISTS public.challenges (
+CREATE TABLE public.challenges (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
     description TEXT,
@@ -91,7 +102,7 @@ CREATE TABLE IF NOT EXISTS public.challenges (
 );
 
 -- TOURNAMENT PARTICIPANTS
-CREATE TABLE IF NOT EXISTS public.tournament_participants (
+CREATE TABLE public.tournament_participants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tournament_id UUID REFERENCES public.tournaments(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -101,7 +112,7 @@ CREATE TABLE IF NOT EXISTS public.tournament_participants (
 );
 
 -- CHALLENGE FILES
-CREATE TABLE IF NOT EXISTS public.challenge_files (
+CREATE TABLE public.challenge_files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     challenge_id UUID REFERENCES public.challenges(id) ON DELETE CASCADE,
     file_name TEXT NOT NULL,
@@ -111,7 +122,7 @@ CREATE TABLE IF NOT EXISTS public.challenge_files (
 );
 
 -- SUBMISSIONS
-CREATE TABLE IF NOT EXISTS public.submissions (
+CREATE TABLE public.submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     challenge_id UUID REFERENCES public.challenges(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -124,7 +135,7 @@ CREATE TABLE IF NOT EXISTS public.submissions (
 );
 
 -- ARENA ACTIVITY FEED (Solves/Actions)
-CREATE TABLE IF NOT EXISTS public.arena_activity_feed (
+CREATE TABLE public.arena_activity_feed (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     actor TEXT,
@@ -135,7 +146,7 @@ CREATE TABLE IF NOT EXISTS public.arena_activity_feed (
 );
 
 -- MATCH HISTORY
-CREATE TABLE IF NOT EXISTS public.match_history (
+CREATE TABLE public.match_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     team_a UUID REFERENCES public.teams(id) ON DELETE CASCADE,
     team_b UUID REFERENCES public.teams(id) ON DELETE CASCADE,
@@ -146,7 +157,7 @@ CREATE TABLE IF NOT EXISTS public.match_history (
 );
 
 -- FIRST BLOODS
-CREATE TABLE IF NOT EXISTS public.first_bloods (
+CREATE TABLE public.first_bloods (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     challenge_id UUID REFERENCES public.challenges(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -156,7 +167,7 @@ CREATE TABLE IF NOT EXISTS public.first_bloods (
 );
 
 -- NOTIFICATIONS
-CREATE TABLE IF NOT EXISTS public.notifications (
+CREATE TABLE public.notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     type TEXT,
     message TEXT,
@@ -164,7 +175,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. RLS POLICIES
+-- 4. RLS POLICIES
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tournaments ENABLE ROW LEVEL SECURITY;
@@ -174,62 +185,44 @@ ALTER TABLE public.tournament_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.first_bloods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.arena_activity_feed ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.match_history ENABLE ROW LEVEL SECURITY;
 
--- Public read access
-DROP POLICY IF EXISTS "Public read profiles" ON public.profiles;
+-- Select Policies (Public)
 CREATE POLICY "Public read profiles" ON public.profiles FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read teams" ON public.teams;
 CREATE POLICY "Public read teams" ON public.teams FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read tournaments" ON public.tournaments;
 CREATE POLICY "Public read tournaments" ON public.tournaments FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read challenges" ON public.challenges;
 CREATE POLICY "Public read challenges" ON public.challenges FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read challenge_files" ON public.challenge_files;
 CREATE POLICY "Public read challenge_files" ON public.challenge_files FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read participants" ON public.tournament_participants;
 CREATE POLICY "Public read participants" ON public.tournament_participants FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read submissions" ON public.submissions;
 CREATE POLICY "Public read submissions" ON public.submissions FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read first_bloods" ON public.first_bloods;
 CREATE POLICY "Public read first_bloods" ON public.first_bloods FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read notifications" ON public.notifications;
 CREATE POLICY "Public read notifications" ON public.notifications FOR SELECT USING (true);
+CREATE POLICY "Public read feed" ON public.arena_activity_feed FOR SELECT USING (true);
+CREATE POLICY "Public read matches" ON public.match_history FOR SELECT USING (true);
 
--- User policies
-DROP POLICY IF EXISTS "Users can join tournaments" ON public.tournament_participants;
+-- User Policies
 CREATE POLICY "Users can join tournaments" ON public.tournament_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can submit flags" ON public.submissions;
 CREATE POLICY "Users can submit flags" ON public.submissions FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Admin write access
-DROP POLICY IF EXISTS "Admin write tournaments" ON public.tournaments;
+-- Admin Policies
 CREATE POLICY "Admin write tournaments" ON public.tournaments FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
-
-DROP POLICY IF EXISTS "Admin write challenges" ON public.challenges;
 CREATE POLICY "Admin write challenges" ON public.challenges FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
-
-DROP POLICY IF EXISTS "Admin write challenge_files" ON public.challenge_files;
 CREATE POLICY "Admin write challenge_files" ON public.challenge_files FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+CREATE POLICY "Admin write notifications" ON public.notifications FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
 
--- 4. SCORING TRIGGERS
+-- 5. FUNCTIONS & TRIGGERS
+
+-- Handle Points Update
 CREATE OR REPLACE FUNCTION public.handle_points_update()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -261,36 +254,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_submission_correct ON public.submissions;
 CREATE TRIGGER on_submission_correct
     AFTER INSERT OR UPDATE ON public.submissions
     FOR EACH ROW EXECUTE PROCEDURE public.handle_points_update();
 
--- 5. TRIGGERS (Auto-create profile on signup)
+-- Handle New User (Auto-create profile)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.profiles (id, username, full_name, role)
     VALUES (
         new.id,
-        new.raw_user_meta_data->>'username',
+        COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
         new.raw_user_meta_data->>'full_name',
-        COALESCE((new.raw_user_meta_data->>'role')::text, 'player')::user_role
+        COALESCE((new.raw_user_meta_data->>'role')::user_role, 'player'::user_role)
     );
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-
--- 5. INITIAL DATA / ADMIN MANAGEMENT
--- To promote a user to admin manually, run the following in your Supabase SQL Editor:
--- UPDATE public.profiles SET role = 'admin' WHERE username = 'YOUR_USERNAME';
--- OR
--- UPDATE public.profiles SET role = 'admin' WHERE id = 'USER_UUID_FROM_AUTH';
-
--- Example: Set default admin if you have a specific username
--- UPDATE public.profiles SET role = 'admin' WHERE username = 'CYBER_PHOENIX';
