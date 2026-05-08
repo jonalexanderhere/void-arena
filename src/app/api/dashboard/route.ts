@@ -15,16 +15,16 @@ export async function GET() {
     const userId = session.user.id;
 
     const [{ data: profile }, { data: feed }, { data: matches }, { count: totalChallenges }, { count: totalSolves }] = await Promise.all([
-      supabase.from('profiles').select('username, avatar_url, bio, xp_level, xp_progress').eq('id', userId).maybeSingle(),
+      supabase.from('profiles').select('username, avatar_url, bio, level, points, xp').eq('id', userId).maybeSingle(),
       supabase.from('arena_activity_feed').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-      supabase.from('match_history').select('*').or(`team_a.eq.${userId},team_b.eq.${userId}`).order('created_at', { ascending: false }).limit(3),
+      supabase.from('match_history').select('*').order('created_at', { ascending: false }).limit(3),
       supabase.from('challenges').select('*', { count: 'exact', head: true }),
       supabase.from('submissions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_correct', true),
     ]);
 
     const username = profile?.username ?? 'UNREGISTERED';
-    const level = profile?.xp_level ?? 1;
-    const progress = Number(profile?.xp_progress ?? 0);
+    const level = profile?.level ?? 1;
+    const progress = Number(profile?.points ?? 0) % 1000 / 10; // Mock progress logic based on points
 
     const safeFeed = Array.isArray(feed) ? feed : [];
     const safeMatches = Array.isArray(matches) ? matches : [];
@@ -38,7 +38,7 @@ export async function GET() {
         progress,
       },
       stats: {
-        total_points: safeFeed.reduce((acc: number, f: any) => acc + Number(f.points_delta ?? 0), 0),
+        total_points: profile?.points ?? 0,
         total_solves: totalSolves ?? 0,
         total_challenges: totalChallenges ?? 0,
       },

@@ -152,10 +152,8 @@ export default function TeamsPage() {
             </div>
             <div className="w-full md:w-80 space-y-4">
               <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Recent Team Activity</div>
-              <div className="space-y-2">
-                <ActivityRow user="Raven_X" action="joined" time="2d ago" />
-                <ActivityRow user="System" action="ranked up" time="4d ago" highlight />
-                <ActivityRow user="Admin" action="invited" time="5d ago" />
+              <div className="space-y-2 opacity-30 italic text-[10px] p-4 text-center border border-dashed border-white/5">
+                No recent tactical maneuvers recorded.
               </div>
             </div>
           </div>

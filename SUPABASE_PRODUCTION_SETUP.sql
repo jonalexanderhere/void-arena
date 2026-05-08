@@ -7,6 +7,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. TABLES
+-- TYPES
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('player', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- PROFILES (Users)
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -15,17 +22,20 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     avatar_url TEXT,
     banner_url TEXT,
     social_links JSONB DEFAULT '{}'::jsonb,
-    role TEXT DEFAULT 'player' CHECK (role IN ('player', 'admin')),
+    role user_role DEFAULT 'player',
     points INTEGER DEFAULT 0,
     level INTEGER DEFAULT 1,
+    xp INTEGER DEFAULT 0,
     bio TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Ensure columns exist if table was created previously
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'player';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT; -- Fallback
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS xp INTEGER DEFAULT 0;
 
 -- TEAMS
 CREATE TABLE IF NOT EXISTS public.teams (
@@ -110,6 +120,28 @@ CREATE TABLE IF NOT EXISTS public.submissions (
     flag TEXT,
     is_correct BOOLEAN DEFAULT FALSE,
     points_awarded INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ARENA ACTIVITY FEED (Solves/Actions)
+CREATE TABLE IF NOT EXISTS public.arena_activity_feed (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    actor TEXT,
+    action TEXT,
+    target TEXT,
+    points_delta INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- MATCH HISTORY
+CREATE TABLE IF NOT EXISTS public.match_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    team_a UUID REFERENCES public.teams(id) ON DELETE CASCADE,
+    team_b UUID REFERENCES public.teams(id) ON DELETE CASCADE,
+    status TEXT DEFAULT 'Scheduled',
+    score TEXT DEFAULT '0-0',
+    winner_id UUID REFERENCES public.teams(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -213,6 +245,17 @@ BEGIN
             SET points = points + NEW.points_awarded 
             WHERE id = NEW.team_id;
         END IF;
+
+        -- Add to Activity Feed
+        INSERT INTO public.arena_activity_feed (user_id, actor, action, target, points_delta)
+        SELECT 
+            NEW.user_id, 
+            p.username, 
+            'captured', 
+            c.title, 
+            NEW.points_awarded
+        FROM public.profiles p, public.challenges c
+        WHERE p.id = NEW.user_id AND c.id = NEW.challenge_id;
     END IF;
     RETURN NEW;
 END;
